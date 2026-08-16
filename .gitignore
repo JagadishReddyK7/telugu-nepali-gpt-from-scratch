@@ -1,0 +1,49 @@
+# =============================================================================
+# The spec forbids committing large binary artifacts. Datasets, tokenized
+# corpora, and checkpoints go to Google Drive with links in the README.
+# =============================================================================
+
+# Corpora and crawl state
+data/
+*.jsonl
+*.jsonl.gz
+*.db
+*.db-journal
+
+# Tokenized binaries
+*.bin
+*.npy
+*.idx
+
+# Model checkpoints
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Language-ID model (131MB, re-downloadable)
+models/lid.176.bin
+models/*.partial
+
+# EXCEPTIONS -- these are small and MUST be committed as Phase 1 deliverables
+!*/tokenizer/*.model
+!*/tokenizer/*.vocab
+!*/tokenizer/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs -- but keep the curated training logs that get graded
+*.log
+!report/**/*.log

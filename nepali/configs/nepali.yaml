@@ -1,0 +1,109 @@
+# =============================================================================
+# Model L -- Nepali (lower-resource, from the assignment's allowed list)
+# =============================================================================
+# Mirrors the Telugu config in structure but shares NOTHING with it at runtime:
+# separate corpus, tokenizer, vocabulary, and weights.
+
+language:
+  name: nepali
+  iso_code: ne
+  script: devanagari
+  display_name: "Nepali"
+  resource_tier: low
+  justification: >
+    Nepali is on the assignment's allowed lower-resource list and is by a wide
+    margin the best-resourced option on it: ~36.5M documents in IndicCorpV2
+    versus 3.38M for the runner-up (Assamese) and under 1M for most others.
+    Combined with IRIISNEPAL/Nepali-Text-Corpus (6.4M documents, 27.5GB) and a
+    dense Nepali online news ecosystem, it is the only language on the list
+    where the ~500M token target is realistically reachable.
+
+targets:
+  target_tokens: 500_000_000
+  min_manual_fraction: 0.20
+  # If the target proves unreachable, the spec permits collecting the maximum
+  # feasible amount provided the exact count and a justification are reported.
+  # Record the actual achieved count here after Phase 1 and explain any gap.
+  achieved_tokens: null
+
+# ---------------------------------------------------------------------------
+# Cleaning thresholds -- NOTE THE DIFFERENCES FROM TELUGU
+# ---------------------------------------------------------------------------
+cleaning:
+  # Devanagari script ratio. This check CANNOT distinguish Nepali from Hindi --
+  # both score ~1.0. It only catches Latin/other-script contamination. The real
+  # separation is done by min_langid_confidence below.
+  min_script_ratio: 0.80
+
+  # THE MOST IMPORTANT SINGLE NUMBER IN THIS FILE.
+  # Set aggressively high (0.70 vs Telugu's 0.60) because Hindi is a plausible
+  # competing hypothesis for every Devanagari document. We would rather discard
+  # borderline genuine Nepali than admit confident-looking Hindi: admitting
+  # Hindi would make Model L covertly bilingual, violating the spec's hard
+  # "no multilingual model" constraint and confounding the Phase 3 analysis.
+  min_langid_confidence: 0.70
+
+  min_chars: 200
+  max_chars: 200_000
+  min_mean_word_len: 2.0
+  max_mean_word_len: 30.0
+  max_dup_line_fraction: 0.30
+  minhash_threshold: 0.80
+  minhash_num_perm: 128
+  shingle_size: 5
+
+# ---------------------------------------------------------------------------
+# Data sources
+# ---------------------------------------------------------------------------
+sources:
+  downloaded:
+    - name: iriisnepal_corpus
+      hf_dataset: IRIISNEPAL/Nepali-Text-Corpus
+      hf_config: null
+      text_field: text
+      notes: "6.4M docs / 27.5GB. Largest public Nepali corpus; primary source."
+    - name: indiccorp_v2_ne
+      hf_dataset: ai4bharat/IndicCorpV2
+      hf_config: npi_Deva
+      text_field: text
+      notes: "~36.5M documents. Second bulk source."
+    - name: nepalitext
+      hf_dataset: Sakonii/nepalitext-language-model-dataset
+      hf_config: null
+      text_field: text
+      notes: "Established Nepali LM corpus; used to top up and diversify."
+  manual:
+    - name: news_scrape
+      kind: scrape
+      notes: "Own crawl of 8 Nepali news outlets. See collect/scrape_news.py."
+    - name: ocr_books
+      kind: ocr
+      notes: "Tesseract OCR (nep traineddata) over public-domain Nepali texts."
+
+splits:
+  train: 0.98
+  validation: 0.01
+  test: 0.01
+  # Deliberately a different seed from Telugu. Same seed would be harmless but
+  # a different one makes it obvious at a glance that the splits are independent.
+  seed: 2718
+  max_val_docs: 20_000
+  max_test_docs: 20_000
+
+# ---------------------------------------------------------------------------
+# Tokenizer -- trained from scratch, vocabulary NEVER shared with Telugu
+# ---------------------------------------------------------------------------
+tokenizer:
+  algorithm: bpe
+  vocab_size_sweep: [8000, 16000, 24000, 32000]
+  chosen_vocab_size: null
+  character_coverage: 0.9995
+  train_sample_docs: 2_000_000
+  train_sample_bytes: 3_000_000_000
+  special_tokens:
+    pad: "<pad>"
+    unk: "<unk>"
+    bos: "<s>"
+    eos: "</s>"
+  split_digits: true
+  byte_fallback: true

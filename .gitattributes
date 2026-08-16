@@ -1,0 +1,9 @@
+# Normalize line endings so Windows checkouts do not show phantom diffs.
+* text=auto eol=lf
+
+# Binary artifacts
+*.model binary
+*.bin binary
+*.pt binary
+*.png binary
+*.pdf binary

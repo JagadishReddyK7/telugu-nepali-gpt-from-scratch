@@ -1,0 +1,124 @@
+# =============================================================================
+# Model H -- Telugu (higher-resource)
+# =============================================================================
+# This file is the single source of truth for every Telugu-side decision.
+# Nothing here is shared with the Nepali config: separate corpus, separate
+# tokenizer, separate vocabulary, separate weights, as the spec requires.
+
+language:
+  name: telugu
+  # ISO 639-1 code as emitted by fastText lid.176.
+  iso_code: te
+  script: telugu           # key into common.text_norm.SCRIPT_RANGES
+  display_name: "Telugu"
+  resource_tier: high
+  # Justification quoted in the Phase 1 report. Telugu has ~31M documents in
+  # IndicCorpV2, a large digital news ecosystem, and an active Wikipedia -- it
+  # is unambiguously among the better-resourced non-English Indian languages.
+  justification: >
+    Telugu is one of the most widely spoken Indian languages (~83M speakers) and
+    has substantial public digital text: ~31M documents in AI4Bharat IndicCorpV2,
+    coverage in Sangraha and CC-100, a large Wikipedia, and a dense online news
+    ecosystem across Andhra Pradesh and Telangana. Its unique Brahmic script
+    means script-range filtering alone removes almost all cross-language
+    contamination, unlike Devanagari languages.
+
+targets:
+  # Target token count after tokenization, per the spec's ~500M goal.
+  target_tokens: 500_000_000
+  # At least 20% of final training tokens must be manually collected.
+  min_manual_fraction: 0.20
+
+# ---------------------------------------------------------------------------
+# Cleaning thresholds
+# ---------------------------------------------------------------------------
+cleaning:
+  # Minimum fraction of LETTERS that must be in Telugu script. Set high because
+  # Telugu script is unique, so genuine Telugu prose scores near 1.0 and
+  # anything low is contamination rather than a borderline case.
+  min_script_ratio: 0.80
+  # Language-ID confidence floor. Lower than Nepali's because Telugu has no
+  # close-script competitor to be confused with.
+  min_langid_confidence: 0.60
+  min_chars: 200
+  max_chars: 200_000
+  # Documents whose mean word length is wildly off are usually extraction
+  # failures (run-together text) or link farms.
+  min_mean_word_len: 2.0
+  max_mean_word_len: 30.0
+  # Reject documents where a single line repeats beyond this fraction --
+  # catches navigation boilerplate that survived extraction.
+  max_dup_line_fraction: 0.30
+  # Near-duplicate detection. News wire copy is reprinted across outlets
+  # constantly, so this matters more than it would for books.
+  minhash_threshold: 0.80
+  minhash_num_perm: 128
+  shingle_size: 5
+
+# ---------------------------------------------------------------------------
+# Data sources
+# ---------------------------------------------------------------------------
+# Every source is tagged with a provenance class so the manual-vs-downloaded
+# split in the statistics report is computed from the data, not asserted.
+sources:
+  downloaded:
+    - name: indiccorp_v2_te
+      hf_dataset: ai4bharat/IndicCorpV2
+      hf_config: tel_Telu
+      text_field: text
+      notes: "Primary bulk source. ~31M documents."
+    - name: sangraha_te
+      hf_dataset: ai4bharat/sangraha
+      hf_config: verified
+      hf_data_dir: verified/tel
+      text_field: text
+      notes: "Verified-quality subset; used to top up if IndicCorpV2 is short."
+  manual:
+    # Populated by telugu/collect/scrape_news.py -- see that file for the site
+    # list and selection rationale.
+    - name: news_scrape
+      kind: scrape
+      notes: "Own crawl of 7 Telugu news outlets. See collect/scrape_news.py."
+    - name: ocr_books
+      kind: ocr
+      notes: "Tesseract OCR (tel traineddata) over public-domain Telugu books."
+
+# ---------------------------------------------------------------------------
+# Splits
+# ---------------------------------------------------------------------------
+splits:
+  # Document-level, never line-level. Splitting by line would put sentences from
+  # the same article in both train and test, which leaks badly and inflates
+  # validation performance.
+  train: 0.98
+  validation: 0.01
+  test: 0.01
+  seed: 1337
+  # Held-out sets are capped so evaluation stays fast on a T4.
+  max_val_docs: 20_000
+  max_test_docs: 20_000
+
+# ---------------------------------------------------------------------------
+# Tokenizer
+# ---------------------------------------------------------------------------
+tokenizer:
+  algorithm: bpe            # SentencePiece BPE, trained from scratch
+  # Swept, then selected on fertility + UNK rate on held-out text.
+  vocab_size_sweep: [8000, 16000, 24000, 32000]
+  chosen_vocab_size: null   # filled in after the sweep; see report/phase1
+  character_coverage: 0.9995
+  # Sample used for tokenizer training. SentencePiece holds the training text in
+  # memory, so we cannot feed it the full corpus on a Colab instance.
+  train_sample_docs: 2_000_000
+  train_sample_bytes: 3_000_000_000
+  special_tokens:
+    pad: "<pad>"
+    unk: "<unk>"
+    bos: "<s>"
+    eos: "</s>"
+  # Split digits into individual tokens. Standard practice: it stops the
+  # tokenizer memorizing thousands of specific numbers as single units and
+  # generalizes arithmetic-adjacent behaviour, which matters for the Phase 3
+  # comparative-reasoning finetune.
+  split_digits: true
+  byte_fallback: true       # guarantees zero UNK at inference
