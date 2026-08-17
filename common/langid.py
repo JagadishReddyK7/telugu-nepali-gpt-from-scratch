@@ -111,8 +111,14 @@ class LanguageFilter:
             import fasttext
         except ImportError as exc:  # pragma: no cover - environment dependent
             raise ImportError(
-                "fasttext is required for language filtering. "
-                "Install with: pip install fasttext-wheel"
+                "fasttext is required for language filtering.\n"
+                "Install with:  pip install fasttext-predict\n"
+                "\n"
+                "Use `fasttext-predict`, NOT `fasttext` or `fasttext-wheel`: we only "
+                "run inference with the pretrained lid.176 classifier and never train "
+                "one, and the prediction-only package ships prebuilt wheels (including "
+                "Python 3.13 on Windows). The full packages require a C++ toolchain "
+                "and fail to build on a stock Windows Python install."
             ) from exc
 
         self.target_lang = target_lang

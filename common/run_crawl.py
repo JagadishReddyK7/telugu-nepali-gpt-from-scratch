@@ -20,6 +20,7 @@ import argparse
 import json
 import logging
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -67,44 +68,44 @@ def setup_logging(verbose: bool = False) -> None:
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
-def crawl_sites(
-    sites: list[NewsSite],
-    output_root: Path,
+def _crawl_one_site(
+    site: NewsSite,
+    raw_dir: Path,
+    state_dir: Path,
     do_discover: bool,
     do_run: bool,
     max_docs_per_site: int | None,
     max_workers: int,
-) -> dict:
-    """Run discovery and/or fetching across a list of sites.
+) -> tuple[str, dict]:
+    """Discover and/or crawl a single site, never raising.
 
     Args:
-        sites: Sources to crawl.
-        output_root: Directory under which ``raw/`` and ``state/`` are created.
-        do_discover: Populate URL frontiers from sitemaps.
+        site: The source to crawl.
+        raw_dir: Directory for output JSONL shards.
+        state_dir: Directory for per-site SQLite state.
+        do_discover: Populate the URL frontier from sitemaps.
         do_run: Fetch and extract pending URLs.
-        max_docs_per_site: Per-site extraction cap, or None for unlimited.
-        max_workers: Concurrent fetch threads per site.
+        max_docs_per_site: Extraction cap, or None for unlimited.
+        max_workers: Concurrent fetch threads within this site.
 
     Returns:
-        Mapping of site name to that site's statistics dictionary.
+        A ``(site_name, stats)`` tuple. On failure ``stats`` carries an
+        ``"error"`` key rather than propagating the exception.
     """
-    output_root = Path(output_root)
-    raw_dir = output_root / "raw"
-    state_dir = output_root / "state"
-    summary: dict[str, dict] = {}
-
-    for site in sites:
-        logger.info("=" * 70)
-        logger.info("SITE: %s (%s)", site.name, site.base_url)
-        logger.info("=" * 70)
-
+    # CRASH ISOLATION.
+    # No single unreachable or misbehaving host may take down a multi-day
+    # crawl. This is not defensive over-engineering: the first Nepali run died
+    # at the fifth site on a truncated HTTP response, losing the whole
+    # session's progress. One dead source is recoverable; a dead process at 3am
+    # is not.
+    try:
+        logger.info("[%s] starting (%s)", site.name, site.base_url)
         sitemaps = site.sitemap_urls
         if not sitemaps:
             sitemaps = discover_sitemaps(site.base_url)
         if not sitemaps:
-            logger.error("Skipping %s: no sitemaps found", site.name)
-            summary[site.name] = {"error": "no_sitemap"}
-            continue
+            logger.error("[%s] no sitemaps found -- skipping", site.name)
+            return site.name, {"error": "no_sitemap"}
 
         config = ScraperConfig(
             name=site.name,
@@ -124,11 +125,84 @@ def crawl_sites(
             if do_run:
                 stats = scraper.run(max_docs=max_docs_per_site)
                 stats["frontier"] = scraper.state.counts()
-                summary[site.name] = stats
-            else:
-                summary[site.name] = {"frontier": counts}
+                return site.name, stats
+            return site.name, {"frontier": counts}
         finally:
             scraper.close()
+
+    except KeyboardInterrupt:
+        raise
+    except Exception as exc:
+        logger.exception("[%s] failed with %s -- continuing",
+                         site.name, type(exc).__name__)
+        return site.name, {"error": f"{type(exc).__name__}: {exc}"}
+
+
+def crawl_sites(
+    sites: list[NewsSite],
+    output_root: Path,
+    do_discover: bool,
+    do_run: bool,
+    max_docs_per_site: int | None,
+    max_workers: int,
+    parallel_sites: int = 4,
+) -> dict:
+    """Run discovery and/or fetching across a list of sites.
+
+    WHY SITES RUN IN PARALLEL
+    -------------------------
+    Politeness is a *per-host* obligation, not a global one. Each site gets its
+    own rate limiter, so fetching from seven different domains simultaneously
+    imposes no more load on any one of them than crawling them one at a time --
+    it simply stops us idling while a single host trickles out responses.
+
+    Running sites sequentially was costing us roughly a 7x slowdown: the whole
+    crawl proceeded at one site's rate limit (well under 1 request/second),
+    which put a ~192,000-URL frontier at nearly four days of wall-clock. That
+    does not fit inside the Phase 1 deadline. Crawling the sites concurrently
+    brings the same frontier down to roughly the largest single site's share.
+
+    Args:
+        sites: Sources to crawl.
+        output_root: Directory under which ``raw/`` and ``state/`` are created.
+        do_discover: Populate URL frontiers from sitemaps.
+        do_run: Fetch and extract pending URLs.
+        max_docs_per_site: Per-site extraction cap, or None for unlimited.
+        max_workers: Concurrent fetch threads *within* each site.
+        parallel_sites: How many sites to crawl concurrently. Each has an
+            independent rate limiter, so this multiplies aggregate throughput
+            without increasing load on any individual host.
+
+    Returns:
+        Mapping of site name to that site's statistics dictionary.
+    """
+    output_root = Path(output_root)
+    raw_dir = output_root / "raw"
+    state_dir = output_root / "state"
+    summary: dict[str, dict] = {}
+
+    n_parallel = max(1, min(parallel_sites, len(sites)))
+    logger.info(
+        "Crawling %d site(s), %d at a time, %d fetch thread(s) each.",
+        len(sites), n_parallel, max_workers,
+    )
+
+    try:
+        with ThreadPoolExecutor(max_workers=n_parallel) as pool:
+            futures = {
+                pool.submit(
+                    _crawl_one_site, site, raw_dir, state_dir,
+                    do_discover, do_run, max_docs_per_site, max_workers,
+                ): site
+                for site in sites
+            }
+            for future in as_completed(futures):
+                name, stats = future.result()
+                summary[name] = stats
+                logger.info("[%s] DONE: %s", name, stats)
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user. All per-site state is saved; "
+                    "re-run the same command to resume.")
 
     # Persist the summary so the dataset-statistics step can read per-source
     # yields without re-scanning every shard.
@@ -136,7 +210,10 @@ def crawl_sites(
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     existing = {}
     if summary_path.exists():
-        existing = json.loads(summary_path.read_text(encoding="utf-8"))
+        try:
+            existing = json.loads(summary_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            logger.warning("crawl_summary.json was corrupt; starting fresh.")
     existing.update(summary)
     summary_path.write_text(
         json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -168,6 +245,12 @@ def build_arg_parser(language: str) -> argparse.ArgumentParser:
     p.add_argument(
         "--max-docs-per-site", type=int, default=None,
         help="Stop each site after roughly this many extracted documents.",
+    )
+    p.add_argument(
+        "--parallel-sites", type=int, default=4,
+        help="How many sites to crawl concurrently. Each site keeps its own "
+             "rate limiter, so this raises aggregate throughput without "
+             "increasing load on any single host.",
     )
     p.add_argument(
         "--max-workers", type=int, default=4,

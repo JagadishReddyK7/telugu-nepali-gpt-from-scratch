@@ -41,7 +41,10 @@ cleaning:
   # close-script competitor to be confused with.
   min_langid_confidence: 0.60
   min_chars: 200
-  max_chars: 200_000
+  # Rejects section landing pages that concatenate many articles. Also
+  # applied at crawl time (ScraperConfig.max_chars) -- this is the backstop
+  # for documents collected before that filter existed.
+  max_chars: 50_000
   # Documents whose mean word length is wildly off are usually extraction
   # failures (run-together text) or link farms.
   min_mean_word_len: 2.0

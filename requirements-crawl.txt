@@ -1,0 +1,20 @@
+# =============================================================================
+# CRAWL-ONLY dependencies -- install these on your local Windows machine.
+# =============================================================================
+# The news crawlers are the long pole in Phase 1 and need days of uptime, so
+# they run locally rather than on a preemptible Colab session. Crawling touches
+# none of the heavy scientific stack: the entire crawl path imports only
+# `requests` and `trafilatura` (plus Python's stdlib sqlite3 and xml.etree).
+#
+# Everything else -- fastText language ID, sentencepiece, torch, the evaluation
+# metrics -- belongs to the cleaning/training stages, which run on Colab (Linux,
+# where every package has a prebuilt wheel). Keeping that split explicit means a
+# Windows toolchain problem can never block data collection.
+#
+#     pip install -r requirements-crawl.txt
+#
+# All of these ship prebuilt wheels for Python 3.13 on Windows; nothing here
+# needs a C++ compiler.
+
+requests>=2.31.0
+trafilatura>=1.8.0     # HTML -> clean article text; handles Indic scripts well

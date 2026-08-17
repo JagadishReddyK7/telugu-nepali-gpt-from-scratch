@@ -3,7 +3,12 @@
 # -----------------------------------------------------------------------------
 requests>=2.31.0
 trafilatura>=1.8.0          # HTML -> clean article text (handles Indic scripts)
-fasttext-wheel>=0.9.2       # language ID; separates Nepali from Hindi
+# Prediction-only fastText build. We never TRAIN a language-ID model -- we only
+# run inference with the pretrained lid.176 classifier -- so the prediction-only
+# package is sufficient and, unlike `fasttext-wheel`, ships prebuilt wheels for
+# Python 3.13 on Windows. `fasttext-wheel` requires MSVC C++ build tools and
+# fails to compile on a stock Windows Python install.
+fasttext-predict>=0.9.2.4   # language ID; separates Nepali from Hindi
 datasets>=2.18.0            # HuggingFace dataset STREAMING only -- no pretrained models
 sentencepiece>=0.2.0        # tokenizer training from scratch
 datasketch>=1.6.4           # MinHash-LSH near-duplicate detection

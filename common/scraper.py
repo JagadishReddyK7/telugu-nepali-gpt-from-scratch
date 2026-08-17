@@ -66,6 +66,17 @@ USER_AGENT = (
     "(academic monolingual corpus collection; contact: hrushikratan.j@vaayum.com)"
 )
 
+# Ordinary request headers. Some CDN front-ends reject requests that omit these
+# outright, producing a 403 that looks like a deliberate policy block but is
+# really just a malformed-looking request. robots.txt remains the authority on
+# what we are allowed to crawl -- see `_robots_allows`, which is never bypassed.
+DEFAULT_HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,ne;q=0.8,te;q=0.8",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "keep-alive",
+}
+
 SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
 
@@ -94,6 +105,21 @@ class ScraperConfig:
             a crash lose at most one partial shard.
         min_chars: Minimum extracted length to keep a document. Short pages are
             usually photo galleries, video stubs, or error pages.
+        max_chars: Maximum extracted length to keep a document. This exists to
+            reject SECTION LANDING PAGES -- URLs like ``/editorial`` or
+            ``/movie/reviews`` that concatenate dozens of full articles into
+            one page. Sitemaps routinely list them alongside real articles.
+
+            They must be filtered at collection time, because near-duplicate
+            detection cannot save us later: an article embedded inside a
+            700,000-character listing page has a *low* Jaccard similarity to
+            its own standalone copy (the listing is ~100x longer), so MinHash
+            sees two distinct documents and keeps both. That silently
+            duplicates a large fraction of the corpus.
+
+            In an early Telugu run these pages were 14.8% of documents but
+            96.3% of all collected text. 50,000 characters is far above any
+            real news article (~8,000 words) and well below these listings.
         url_must_contain: If non-empty, only crawl URLs containing one of these
             substrings. Useful for restricting to article paths.
         url_must_not_contain: Skip URLs containing any of these substrings.
@@ -110,6 +136,7 @@ class ScraperConfig:
     max_retries: int = 3
     docs_per_shard: int = 5000
     min_chars: int = 400
+    max_chars: int = 50_000
     url_must_contain: list[str] = field(default_factory=list)
     url_must_not_contain: list[str] = field(default_factory=lambda: [
         "/video/", "/photo/", "/gallery/", "/tag/", "/author/",
@@ -226,8 +253,12 @@ class ShardWriter:
         # restart never overwrites previous output.
         existing = sorted(self.output_dir.glob(f"{prefix}-*.jsonl"))
         self._shard_idx = len(existing)
+        # LAZY OPEN. The file is not created until the first document is
+        # written. Opening eagerly meant a `--discover` run (which writes no
+        # documents at all) littered the output directory with empty shards,
+        # and worse, each empty shard bumped the resume counter so the next
+        # real run started numbering from the wrong index.
         self._fh = None
-        self._open_new_shard()
 
     def _open_new_shard(self) -> None:
         """Close the current shard (if any) and open the next one."""
@@ -244,6 +275,8 @@ class ShardWriter:
             record: JSON-serializable document dictionary.
         """
         with self._lock:
+            if self._fh is None:
+                self._open_new_shard()
             self._fh.write(json.dumps(record, ensure_ascii=False) + "\n")
             self._count += 1
             if self._count % 200 == 0:
@@ -278,12 +311,15 @@ class NewsScraper:
             config.output_dir, config.name, config.docs_per_shard
         )
         self._session = requests.Session()
-        self._session.headers.update({"User-Agent": USER_AGENT})
+        self._session.headers.update(
+            {**DEFAULT_HEADERS, "User-Agent": USER_AGENT}
+        )
         self._robots: dict[str, urllib.robotparser.RobotFileParser] = {}
         self._robots_lock = threading.Lock()
         self._last_request = 0.0
         self._rate_lock = threading.Lock()
-        self._stats = {"fetched": 0, "extracted": 0, "too_short": 0, "failed": 0}
+        self._stats = {"fetched": 0, "extracted": 0, "too_short": 0,
+                       "too_long_listing_page": 0, "failed": 0}
 
     # ---------------------------------------------------------------- robots
 
@@ -353,8 +389,15 @@ class NewsScraper:
                     continue
                 # 404, 403, etc. are permanent -- do not retry.
                 return None
-            except requests.RequestException as exc:
-                logger.debug("Request failed for %s: %s", url, exc)
+            except Exception as exc:
+                # Deliberately broad. `requests.RequestException` does NOT cover
+                # everything that can come out of the stack -- notably
+                # urllib3.exceptions.ProtocolError on a truncated chunked
+                # response, which killed an early crawl run. In an unattended
+                # multi-day job, one bad URL must never escalate to a dead
+                # process.
+                logger.debug("Request failed for %s: %s: %s",
+                             url, type(exc).__name__, exc)
                 time.sleep(2 ** attempt)
         return None
 
@@ -380,6 +423,36 @@ class NewsScraper:
             return [], []
 
         tag = root.tag.split("}")[-1]
+
+        # RSS / Atom feeds.
+        # `sitemap_discovery` falls back to /rss.xml and /feed when no real
+        # sitemap exists, and its probe accepts anything containing "<rss".
+        # Without this branch the feed parses as neither a sitemapindex nor a
+        # (namespaced) urlset, so findall returns nothing and the site silently
+        # yields ZERO urls while still reporting "found sitemap". That is
+        # exactly what happened to several Nepali sources.
+        #
+        # Feeds are shallow -- typically only the most recent 20-50 items -- so
+        # this recovers breadth, not depth. Still worth having: source
+        # diversity matters as much as raw volume for a monolingual corpus.
+        if tag == "rss":
+            links = [
+                el.text.strip()
+                for el in root.findall(".//item/link")
+                if el is not None and el.text
+            ]
+            logger.info("Parsed RSS feed: %d item link(s)", len(links))
+            return [], links
+        if tag == "feed":  # Atom
+            links = [
+                el.get("href").strip()
+                for el in root.findall(".//{http://www.w3.org/2005/Atom}entry/"
+                                       "{http://www.w3.org/2005/Atom}link")
+                if el.get("href")
+            ]
+            logger.info("Parsed Atom feed: %d entry link(s)", len(links))
+            return [], links
+
         if tag == "sitemapindex":
             children = [
                 loc.text.strip()
@@ -387,12 +460,33 @@ class NewsScraper:
                 if loc.text
             ]
             return children, []
-        urls = [
+
+        entries = [
             loc.text.strip()
             for loc in root.findall(".//sm:url/sm:loc", SITEMAP_NS)
             if loc.text
         ]
-        return [], urls
+
+        # Some sites publish an index of child sitemaps but wrap the entries in
+        # <url> elements instead of the correct <sitemap> elements, so the file
+        # parses as a plain urlset. Without this check we would treat those
+        # child-sitemap URLs as articles and collect a handful of XML files
+        # instead of thousands of pages -- exactly what happened on setopati,
+        # which reported a suspiciously round "6 urls".
+        child_sitemaps = [
+            u for u in entries
+            if u.lower().split("?")[0].endswith((".xml", ".xml.gz"))
+        ]
+        if child_sitemaps:
+            page_urls = [u for u in entries if u not in set(child_sitemaps)]
+            logger.info(
+                "Sitemap %s lists %d child sitemaps inside <url> elements; "
+                "following them as an index.",
+                root.tag.split("}")[-1], len(child_sitemaps),
+            )
+            return child_sitemaps, page_urls
+
+        return [], entries
 
     def _url_wanted(self, url: str) -> bool:
         """Apply the configured URL include/exclude filters.
@@ -498,6 +592,15 @@ class NewsScraper:
             self.state.mark(url, "skipped")
             return
 
+        # Section landing page, not an article. See ScraperConfig.max_chars for
+        # why this cannot be deferred to the deduplication stage.
+        if len(text) > self.config.max_chars:
+            self._stats["too_long_listing_page"] += 1
+            logger.debug("Rejected likely listing page (%d chars): %s",
+                         len(text), url)
+            self.state.mark(url, "skipped")
+            return
+
         self._stats["extracted"] += 1
         self.writer.write({
             # Stable synthetic ID: lets us cross-reference a document between
@@ -551,9 +654,11 @@ class NewsScraper:
                 elapsed = time.time() - start
                 rate = self._stats["extracted"] / max(elapsed, 1)
                 logger.info(
-                    "[%s] extracted=%d fetched=%d short=%d failed=%d (%.1f docs/s)",
+                    "[%s] extracted=%d fetched=%d short=%d listing=%d failed=%d "
+                    "(%.1f docs/s)",
                     self.config.name, self._stats["extracted"],
                     self._stats["fetched"], self._stats["too_short"],
+                    self._stats["too_long_listing_page"],
                     self._stats["failed"], rate,
                 )
         except KeyboardInterrupt:

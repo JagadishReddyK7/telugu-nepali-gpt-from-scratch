@@ -44,7 +44,10 @@ cleaning:
   min_langid_confidence: 0.70
 
   min_chars: 200
-  max_chars: 200_000
+  # Rejects section landing pages that concatenate many articles. Also
+  # applied at crawl time (ScraperConfig.max_chars) -- this is the backstop
+  # for documents collected before that filter existed.
+  max_chars: 50_000
   min_mean_word_len: 2.0
   max_mean_word_len: 30.0
   max_dup_line_fraction: 0.30
