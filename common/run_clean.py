@@ -59,6 +59,8 @@ def load_clean_config(config_path: Path, use_langid: bool = True) -> CleanConfig
         seed=splits.get("seed", 1337),
         max_val_docs=splits.get("max_val_docs", 20_000),
         max_test_docs=splits.get("max_test_docs", 20_000),
+        max_downloaded_to_manual_ratio=cleaning.get(
+            "max_downloaded_to_manual_ratio", 4.0),
         use_langid=use_langid,
     )
 

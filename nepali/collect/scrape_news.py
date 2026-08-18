@@ -225,6 +225,118 @@ NEPALI_SITES: list[NewsSite] = [
         delay_seconds=1.0,
         notes="Ministry of Finance. Budget documents; economic register.",
     ),
+
+    # -----------------------------------------------------------------------
+    # THIRD WAVE -- added after the primary source blocked the crawler
+    # -----------------------------------------------------------------------
+    # The Nepali manual share is the binding constraint on the whole corpus:
+    # the >=20% rule means every manually collected token unlocks four more
+    # downloaded ones, so a token scraped here is worth five in the final
+    # corpus. With nepalpress lost to an IP block, breadth is the only
+    # remaining lever.
+    #
+    # These are Nepal's second-tier and specialist portals. Most run WordPress,
+    # which publishes a full sitemap index -- historically our highest-yield
+    # pattern (nepalpress alone gave 170,000 URLs that way). Expect maybe a
+    # third to work; that is fine, because failures cost seconds and a single
+    # WordPress hit can yield tens of thousands of URLs.
+    NewsSite(
+        name="hamrakura",
+        base_url="https://www.hamrakura.com",
+        delay_seconds=0.8,
+        notes="Hamra Kura. General news portal.",
+    ),
+    NewsSite(
+        name="thahakhabar",
+        base_url="https://www.thahakhabar.com",
+        delay_seconds=0.8,
+        notes="Thaha Khabar. High-volume general news.",
+    ),
+    NewsSite(
+        name="pahilopost",
+        base_url="https://pahilopost.com",
+        delay_seconds=0.8,
+        notes="Pahilo Post. Digital-native outlet with long-form reporting.",
+    ),
+    NewsSite(
+        name="khabarhub",
+        base_url="https://www.khabarhub.com",
+        url_must_contain=["/nep/", "/np/"],
+        delay_seconds=0.8,
+        notes="Khabarhub Nepali section. Bilingual site; path filter keeps Nepali.",
+    ),
+    NewsSite(
+        name="dcnepal",
+        base_url="https://www.dcnepal.com",
+        delay_seconds=0.8,
+        notes="DC Nepal. General news portal.",
+    ),
+    NewsSite(
+        name="imagekhabar",
+        base_url="https://www.imagekhabar.com",
+        delay_seconds=0.8,
+        notes="Image Khabar. Broadcast-affiliated news portal.",
+    ),
+    NewsSite(
+        name="sajhapost",
+        base_url="https://www.sajhapost.com",
+        delay_seconds=0.8,
+        notes="Sajha Post. General-interest portal.",
+    ),
+    NewsSite(
+        name="clickmandu",
+        base_url="https://clickmandu.com",
+        delay_seconds=0.8,
+        notes="Clickmandu. Business and economy; distinct vocabulary.",
+    ),
+    NewsSite(
+        name="corporatenepal",
+        base_url="https://corporatenepal.com",
+        delay_seconds=0.8,
+        notes="Corporate Nepal. Business register.",
+    ),
+    NewsSite(
+        name="reportersnepal",
+        base_url="https://reportersnepal.com",
+        delay_seconds=0.8,
+        notes="Reporters Nepal. General news.",
+    ),
+    NewsSite(
+        name="nepalaaja",
+        base_url="https://nepalaaja.com",
+        delay_seconds=0.8,
+        notes="Nepal Aaja. General news portal.",
+    ),
+    NewsSite(
+        name="drishtinews",
+        base_url="https://drishtinews.com",
+        delay_seconds=0.8,
+        notes="Drishti News. Weekly with commentary and analysis.",
+    ),
+    NewsSite(
+        name="nepalsamaya",
+        base_url="https://nepalsamaya.com",
+        delay_seconds=0.8,
+        notes="Nepal Samaya. Digital news outlet.",
+    ),
+    NewsSite(
+        name="ratopati_np",
+        base_url="https://ratopati.com",
+        delay_seconds=0.8,
+        notes="Ratopati apex domain (the www host yielded only an RSS feed).",
+    ),
+    NewsSite(
+        name="onlinekhabar_np",
+        base_url="https://onlinekhabar.com",
+        delay_seconds=0.8,
+        notes="Onlinekhabar apex domain; the www host exposed only a feed.",
+    ),
+    NewsSite(
+        name="setopati_np",
+        base_url="https://setopati.com",
+        delay_seconds=0.8,
+        notes="Setopati apex domain; the www host exposed only category pages.",
+    ),
 ]
 
 

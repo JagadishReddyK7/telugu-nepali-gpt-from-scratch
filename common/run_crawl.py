@@ -100,12 +100,21 @@ def _crawl_one_site(
     # is not.
     try:
         logger.info("[%s] starting (%s)", site.name, site.base_url)
-        sitemaps = site.sitemap_urls
-        if not sitemaps:
+
+        # Sitemaps are needed ONLY to discover new URLs. When merely fetching,
+        # the frontier already lives in the state database, so a site whose
+        # sitemap has since become unreachable must still drain its queue.
+        #
+        # Getting this wrong was costly: a --run-only restart reported
+        # "no sitemaps found -- skipping" for a source holding 153,867 pending
+        # URLs and abandoned every one of them.
+        sitemaps = list(site.sitemap_urls or [])
+        if do_discover and not sitemaps:
             sitemaps = discover_sitemaps(site.base_url)
-        if not sitemaps:
-            logger.error("[%s] no sitemaps found -- skipping", site.name)
-            return site.name, {"error": "no_sitemap"}
+            if not sitemaps:
+                logger.warning("[%s] no sitemaps found -- cannot discover new "
+                               "URLs (any existing frontier will still be "
+                               "fetched)", site.name)
 
         config = ScraperConfig(
             name=site.name,
@@ -118,10 +127,14 @@ def _crawl_one_site(
         )
         scraper = NewsScraper(config)
         try:
-            if do_discover:
+            if do_discover and sitemaps:
                 scraper.discover()
             counts = scraper.state.counts()
             logger.info("[%s] frontier status: %s", site.name, counts)
+            if not counts.get("pending") and not sitemaps:
+                logger.info("[%s] nothing pending and no sitemap -- skipping",
+                            site.name)
+                return site.name, {"error": "no_sitemap_and_empty_frontier"}
             if do_run:
                 stats = scraper.run(max_docs=max_docs_per_site)
                 stats["frontier"] = scraper.state.counts()

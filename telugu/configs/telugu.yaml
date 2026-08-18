@@ -54,6 +54,9 @@ cleaning:
   max_dup_line_fraction: 0.30
   # Near-duplicate detection. News wire copy is reprinted across outlets
   # constantly, so this matters more than it would for books.
+  # Discard surplus downloaded text so manual stays >=20% of the corpus.
+  # 4.0 => downloaded <= 4x manual => manual >= 20%. Enforced in the cleaner.
+  max_downloaded_to_manual_ratio: 4.0
   minhash_threshold: 0.80
   minhash_num_perm: 128
   shingle_size: 5

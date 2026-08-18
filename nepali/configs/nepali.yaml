@@ -51,6 +51,9 @@ cleaning:
   min_mean_word_len: 2.0
   max_mean_word_len: 30.0
   max_dup_line_fraction: 0.30
+  # Discard surplus downloaded text so manual stays >=20% of the corpus.
+  # 4.0 => downloaded <= 4x manual => manual >= 20%. Enforced in the cleaner.
+  max_downloaded_to_manual_ratio: 4.0
   minhash_threshold: 0.80
   minhash_num_perm: 128
   shingle_size: 5

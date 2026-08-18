@@ -95,6 +95,17 @@ class CleanConfig:
     max_val_docs: int = 20_000
     max_test_docs: int = 20_000
     use_langid: bool = True
+    # Cap downloaded text at this multiple of the manually collected text.
+    # 4.0 means downloaded <= 4x manual, i.e. manual >= 20% of the corpus --
+    # exactly the spec's requirement, enforced mechanically instead of hoped for.
+    #
+    # This matters because the two shares are collected independently: the
+    # download hits a fixed character budget while the crawl yields whatever
+    # the sites allow. For Nepali the crawl came up short, so using every
+    # downloaded document would put the manual share at 7%. Discarding surplus
+    # downloaded text is the correct remedy -- a smaller corpus that satisfies
+    # the constraint beats a larger one that violates it.
+    max_downloaded_to_manual_ratio: float | None = 4.0
 
 
 @dataclass
@@ -242,8 +253,15 @@ class CorpusCleaner:
         stats = CleanStats()
         start = time.time()
 
-        lsh = MinHashLSH(threshold=cfg.minhash_threshold,
-                         num_perm=cfg.minhash_num_perm)
+        # datasketch derives its band count from (threshold, num_perm) and
+        # raises if that yields fewer than 2 bands -- which a very high
+        # threshold does. Clamp rather than crash a multi-hour job on a config
+        # typo.
+        threshold = min(max(cfg.minhash_threshold, 0.30), 0.95)
+        if threshold != cfg.minhash_threshold:
+            logger.warning("minhash_threshold %.2f out of usable range; using %.2f",
+                           cfg.minhash_threshold, threshold)
+        lsh = MinHashLSH(threshold=threshold, num_perm=cfg.minhash_num_perm)
         seen_exact: set[int] = set()
         lang_filter = self._get_language_filter()
 
@@ -255,11 +273,50 @@ class CorpusCleaner:
         # overflow goes to train rather than being discarded.
         held_out_counts = Counter()
 
-        shards = sorted(glob.glob(str(self.raw_dir / "*.jsonl")))
-        logger.info("[%s] cleaning %d raw shard(s)", self.language, len(shards))
+        # Classify each shard by provenance from its first record, then process
+        # MANUAL shards first. We cannot know the downloaded budget until the
+        # manual total is known, and manual text is never discarded, so this
+        # ordering lets the whole job run in a single pass over the data.
+        manual_shards, downloaded_shards = [], []
+        for path in sorted(glob.glob(str(self.raw_dir / "*.jsonl"))):
+            prov = "unknown"
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    for line in fh:
+                        if line.strip():
+                            prov = json.loads(line).get("provenance", "unknown")
+                            break
+            except (OSError, json.JSONDecodeError):
+                pass
+            (manual_shards if prov == "manual_scrape" else downloaded_shards).append(path)
+
+        shards = manual_shards + downloaded_shards
+        logger.info("[%s] cleaning %d shard(s): %d manual, %d downloaded",
+                    self.language, len(shards), len(manual_shards),
+                    len(downloaded_shards))
+        downloaded_budget: float | None = None
+        downloaded_chars = 0
 
         try:
             for shard in shards:
+                # Entering the downloaded shards: manual total is now final, so
+                # the budget can be computed.
+                if (shard == (downloaded_shards[0] if downloaded_shards else None)
+                        and cfg.max_downloaded_to_manual_ratio):
+                    manual_chars = stats.chars_per_provenance.get("manual_scrape", 0)
+                    downloaded_budget = manual_chars * cfg.max_downloaded_to_manual_ratio
+                    logger.info(
+                        "[%s] manual share final: %s chars. Capping downloaded at "
+                        "%s chars (%.1fx) to hold manual at >=%.0f%% of the corpus.",
+                        self.language, f"{manual_chars:,}",
+                        f"{downloaded_budget:,.0f}",
+                        cfg.max_downloaded_to_manual_ratio,
+                        100 / (1 + cfg.max_downloaded_to_manual_ratio),
+                    )
+                    if manual_chars == 0:
+                        logger.error("[%s] NO manual documents survived cleaning. "
+                                     "The >=20%% requirement cannot be met.",
+                                     self.language)
                 for line in open(shard, encoding="utf-8"):
                     line = line.strip()
                     if not line:
@@ -273,6 +330,11 @@ class CorpusCleaner:
                     stats.read += 1
                     if limit and stats.read > limit:
                         raise StopIteration
+
+                    if (downloaded_budget is not None
+                            and downloaded_chars >= downloaded_budget):
+                        stats.rejected["downloaded_over_ratio_budget"] += 1
+                        continue
 
                     if stats.read % 100_000 == 0:
                         logger.info("  [%s] read %s kept %s (%.1f%%)",
@@ -369,6 +431,8 @@ class CorpusCleaner:
                     stats.per_source[source] += 1
                     stats.per_provenance[provenance] += 1
                     stats.chars_per_provenance[provenance] += len(text)
+                    if provenance != "manual_scrape":
+                        downloaded_chars += len(text)
                     stats.split_docs[split] += 1
                     stats.split_chars[split] += len(text)
 
