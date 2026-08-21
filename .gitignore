@@ -1,36 +1,92 @@
 # =============================================================================
 # The spec forbids committing large binary artifacts. Datasets, tokenized
 # corpora, and checkpoints go to Google Drive with links in the README.
+#
+# NOTE ON THE `!` EXCEPTIONS BELOW
+# -------------------------------
+# Git cannot re-include a file whose PARENT DIRECTORY is excluded -- once
+# `data/` is ignored, git never descends into it, so `!data/**/whatever` can
+# never match. That is why the Phase 1 statistics are COPIED OUT of `data/`
+# into `report/phase1/stats/` rather than un-ignored in place, and why the
+# tokenizer deliverables live in `<lang>/tokenizer/` (written there by
+# `scripts/reselect.py`) rather than only under `data/`.
 # =============================================================================
 
-# Corpora and crawl state
+# ---- Corpora and crawl state ------------------------------------------------
 data/
 *.jsonl
 *.jsonl.gz
 *.db
 *.db-journal
 
-# Tokenized binaries
+# ---- Tokenized binaries -----------------------------------------------------
 *.bin
 *.npy
 *.idx
 
-# Model checkpoints
+# ---- Model checkpoints ------------------------------------------------------
 checkpoints/
 *.pt
 *.pth
 *.ckpt
 
-# Language-ID model (131MB, re-downloadable)
+# ---- Language-ID model (131MB, re-downloadable) -----------------------------
 models/lid.176.bin
 models/*.partial
 
-# EXCEPTIONS -- these are small and MUST be committed as Phase 1 deliverables
+# ---- EXCEPTIONS: small Phase 1 deliverables that MUST be committed ----------
+# These live outside `data/`, so these negations actually take effect.
 !*/tokenizer/*.model
 !*/tokenizer/*.vocab
-!*/tokenizer/*.json
+!report/**/*.json
+!report/**/*.png
+!report/**/*.md
 
-# Python
+# ---- Transfer archives ------------------------------------------------------
+# Hundreds of MB each; GitHub hard-rejects anything over 100MB, so a single
+# `git add -A` without these lines fails the push. Always regenerable from
+# make_upload_tars.py.
+upload/
+*.tar.gz
+*.tar
+*.zip
+_tmp_report/
+
+# =============================================================================
+# Working scaffolding — real code, but not Phase 1 deliverables, and in two
+# cases actively misleading if committed.
+# =============================================================================
+
+# One-off config mutator. The YAML files are the source of truth for every
+# threshold; a script that rewrites them in place invites the reader to wonder
+# which of the two actually applied. The reasoning it documents is in the
+# Phase 1 report §6.1 and §8.
+patch_500m.py
+
+# Operational notes written mid-project. Superseded and internally inconsistent
+# with the final numbers (it still quotes 479.6M Telugu tokens against the
+# measured 674,176,616), so committing it would put two different answers to
+# the same question in one repository.
+RUNBOOK_500M.md
+
+# Drive transfer tooling and ad-hoc diagnostics. Useful during the run, not
+# part of the deliverable set.
+make_upload_tars.py
+diagnose_manual.py
+
+# Root-level duplicates of <lang>/collect/scrape_news_wave4.py — byte-identical
+# copies left over from staging them into the package directories.
+telugu_wave4.py
+nepali_wave4.py
+
+# Pre-reselect copies of the tokenizer sweep, which record chosen_vocab_size
+# 32000 and therefore contradict the 16,000 actually used. The authoritative
+# copies are report/phase1/stats/*_tokenizer_sweep.json (chosen 16000,
+# sweep_selected_vocab_size 32000).
+report/phase1/telugu_tokenizer_sweep.json
+report/phase1/nepali_tokenizer_sweep.json
+
+# ---- Python -----------------------------------------------------------------
 __pycache__/
 *.py[cod]
 .venv/
@@ -38,12 +94,15 @@ venv/
 .ipynb_checkpoints/
 *.egg-info/
 
-# OS / editor
+# ---- OS / editor ------------------------------------------------------------
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Logs -- but keep the curated training logs that get graded
+# ---- Logs -- but keep any curated log that gets graded ----------------------
 *.log
 !report/**/*.log
+
+# ---- Staging area for empty/corrupt shards pulled out before a run ----------
+data/_empty_shards_to_delete/

@@ -1,0 +1,81 @@
+{
+  "language": "nepali",
+  "training_sample": {
+    "documents": 122465,
+    "bytes": 400000097,
+    "source": "data/nepali/clean/train.jsonl"
+  },
+  "eval_documents": 5000,
+  "settings": {
+    "model_type": "bpe",
+    "character_coverage": 0.9995,
+    "split_digits": true,
+    "byte_fallback": true,
+    "d_model_for_costing": 384,
+    "fertility_tolerance": 0.03
+  },
+  "sweep": [
+    {
+      "vocab_size": 8000,
+      "tokens": 1357319,
+      "words": 816730,
+      "chars": 5302880,
+      "bytes": 14120239,
+      "fertility": 1.6619,
+      "chars_per_token": 3.9069,
+      "bytes_per_token": 10.403,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 3072000,
+      "model_file": "nepali_sp_8000.model"
+    },
+    {
+      "vocab_size": 16000,
+      "tokens": 1211986,
+      "words": 816730,
+      "chars": 5302880,
+      "bytes": 14120239,
+      "fertility": 1.4839,
+      "chars_per_token": 4.3754,
+      "bytes_per_token": 11.6505,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 6144000,
+      "model_file": "nepali_sp_16000.model"
+    },
+    {
+      "vocab_size": 24000,
+      "tokens": 1151810,
+      "words": 816730,
+      "chars": 5302880,
+      "bytes": 14120239,
+      "fertility": 1.4103,
+      "chars_per_token": 4.604,
+      "bytes_per_token": 12.2592,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 9216000,
+      "model_file": "nepali_sp_24000.model"
+    },
+    {
+      "vocab_size": 32000,
+      "tokens": 1117122,
+      "words": 816730,
+      "chars": 5302880,
+      "bytes": 14120239,
+      "fertility": 1.3678,
+      "chars_per_token": 4.7469,
+      "bytes_per_token": 12.6398,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 12288000,
+      "model_file": "nepali_sp_32000.model"
+    }
+  ],
+  "chosen_vocab_size": 16000,
+  "chosen_model": "nepali_sp_16000.model",
+  "chosen_vocab": "nepali_sp_32000.vocab",
+  "sweep_selected_vocab_size": 32000,
+  "chosen_vocab_file": "nepali_sp_16000.vocab",
+  "selection_note": "Vocabulary was set to 16,000 by scripts/reselect.py, overriding the sweep's selection of 32,000. The sweep selects on fertility and unknown-token rate; with byte_fallback enabled the UNK rate is identically 0.00 at every vocabulary size and carries no information, and fertility falls monotonically with vocabulary size, so that criterion applied literally always returns the largest candidate. The override selects on fertility per parameter spent: at d_model=384 a 32,000 vocabulary costs 12.29M tied embedding parameters against a ~25M total budget for Phase 2, versus 6.14M at 16,000. The fertility cost of the override is ~10%, and the smaller vocabulary yields MORE training tokens from the same corpus. See report/phase1 for the full argument."
+}

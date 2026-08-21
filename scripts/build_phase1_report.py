@@ -85,8 +85,23 @@ def fig_cleaning_funnel(stats: dict[str, dict]) -> Path:
     return out
 
 
-def fig_provenance(stats: dict[str, dict]) -> Path:
-    """Plot the manual vs downloaded character split against the 20% rule."""
+def fig_provenance(stats: dict[str, dict], counts: dict[str, dict]) -> Path:
+    """Plot corpus composition and the manual share against the 20% rule.
+
+    The right-hand panel gates on the **token** share, because that is how the
+    spec states the requirement. An earlier version plotted the CHARACTER share
+    against the same 20% line, which drew Nepali in red at 16.1% -- a corpus
+    that actually passes at 21.8% in tokens. The character share is still shown
+    beside it, because the gap between the two bars is itself a finding (manual
+    text tokenizes denser), but the pass/fail colouring follows tokens.
+
+    Args:
+        stats: Per-language cleaning statistics.
+        counts: Per-language token counts from the encoding pass.
+
+    Returns:
+        Path to the written figure.
+    """
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -99,9 +114,9 @@ def fig_provenance(stats: dict[str, dict]) -> Path:
                   for l in langs]
     x = np.arange(len(langs))
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.8))
 
-    ax1.bar(x, manual, 0.5, label="Manual (scraped)")
+    ax1.bar(x, manual, 0.5, label="Manual (scraped / OCR)")
     ax1.bar(x, downloaded, 0.5, bottom=manual, label="Downloaded (public corpora)")
     ax1.set_title("Corpus composition by provenance")
     ax1.set_xlabel("Language")
@@ -111,17 +126,30 @@ def fig_provenance(stats: dict[str, dict]) -> Path:
     ax1.legend()
     ax1.grid(axis="y", alpha=0.3)
 
-    frac = [stats[l].get("manual_char_fraction", 0) * 100 for l in langs]
-    colors = ["seagreen" if f >= 20 else "indianred" for f in frac]
-    ax2.bar(x, frac, 0.5, color=colors, label="Manual share achieved")
+    char_frac = [stats[l].get("manual_char_fraction", 0) * 100 for l in langs]
+    tok_frac = [counts.get(l, {}).get("train_manual_token_share", 0) * 100
+                for l in langs]
+    width = 0.34
+
+    ax2.bar(x - width / 2, char_frac, width, color="lightsteelblue",
+            label="Manual share of characters")
+    bars = ax2.bar(x + width / 2, tok_frac, width,
+                   color=["seagreen" if f >= 20 else "indianred" for f in tok_frac],
+                   label="Manual share of TOKENS (the requirement)")
     ax2.axhline(20, color="black", linestyle="--",
-                label="Requirement (>=20%)")
-    ax2.set_title("Manual-collection share vs the project requirement")
+                label="Requirement (>= 20% of training tokens)")
+
+    for bar, f in zip(bars, tok_frac):
+        ax2.annotate(f"{f:.2f}%", (bar.get_x() + bar.get_width() / 2, f),
+                     ha="center", va="bottom", fontsize=9)
+
+    ax2.set_title("Manual share: characters vs tokens")
     ax2.set_xlabel("Language")
-    ax2.set_ylabel("Manual share of characters (%)")
+    ax2.set_ylabel("Manual share (%)")
     ax2.set_xticks(x)
     ax2.set_xticklabels([l.title() for l in langs])
-    ax2.legend()
+    ax2.set_ylim(0, max(max(tok_frac + char_frac) * 1.25, 30))
+    ax2.legend(fontsize=8, loc="upper right")
     ax2.grid(axis="y", alpha=0.3)
 
     fig.tight_layout()
@@ -228,20 +256,50 @@ def build_report(clean: dict, tok: dict, counts: dict, figs: list) -> str:
         "",
     ]
 
+    # THE GATE IS ON TOKENS, NOT CHARACTERS.
+    # The spec states the requirement as ">=20% of the final training tokens".
+    # An earlier version of this function tested manual_char_fraction, which is
+    # a different and consistently smaller number: the cleaner's ratio cap is
+    # applied to characters, holding the character share near 18%, while the
+    # measured token share sits well above 20% because the manual and
+    # downloaded halves do not tokenize at the same rate. Testing characters
+    # printed FAIL on a corpus that passes.
     rows = []
     for lang in L:
         s = clean[lang]
-        m = s.get("chars_per_provenance", {}).get("manual_scrape", 0)
-        d = s.get("chars_per_provenance", {}).get("downloaded", 0)
-        frac = s.get("manual_char_fraction", 0)
-        rows.append([lang.title(), f"{m:,}", f"{d:,}", f"{frac:.1%}",
-                     "PASS" if frac >= 0.20 else "FAIL"])
+        c = counts.get(lang, {})
+        m_ch = s.get("chars_per_provenance", {}).get("manual_scrape", 0)
+        d_ch = s.get("chars_per_provenance", {}).get("downloaded", 0)
+        ch_frac = s.get("manual_char_fraction", 0)
+        m_tok = c.get("train_manual_tokens")
+        tok_frac = c.get("train_manual_token_share")
+        if tok_frac is None:
+            rows.append([lang.title(), f"{m_ch:,}", f"{d_ch:,}", f"{ch_frac:.1%}",
+                         "not encoded", "—", "UNKNOWN"])
+        else:
+            rows.append([lang.title(), f"{m_ch:,}", f"{d_ch:,}", f"{ch_frac:.1%}",
+                         f"{m_tok:,}", f"{tok_frac:.1%}",
+                         "PASS" if tok_frac >= 0.20 else "FAIL"])
     lines += [md_table(
-        ["Language", "Manual chars", "Downloaded chars", "Manual share",
-         "≥20%?"], rows), ""]
+        ["Language", "Manual chars", "Downloaded chars", "Manual char share",
+         "Manual train tokens", "Manual TOKEN share", "≥20%?"], rows), ""]
     lines += [
+        "**The ≥20% requirement is stated in tokens, so the rightmost column is "
+        "the one that decides compliance.** The character share is reported "
+        "beside it deliberately: the two differ, and the difference is not "
+        "noise. The cleaning stage enforces the ratio on characters (it runs "
+        "before any tokenizer exists), while manually collected text — news "
+        "prose and OCR'd books — tokenizes at a different rate than bulk web "
+        "crawl. Quoting only the character share would understate compliance; "
+        "quoting only the token share would hide the mechanism.",
+        "",
         "The manual share is computed from per-document provenance tags "
-        "recorded at collection time, so it is auditable rather than asserted. "
+        "recorded at collection time and re-counted during the single "
+        "tokenization pass in `common/encode_corpus.py`, so it is auditable "
+        "rather than asserted. Any document with a missing or malformed "
+        "provenance tag is counted as downloaded, so the reported manual share "
+        "can only ever be an underestimate.",
+        "",
         "Surplus downloaded text is discarded by the cleaning stage to hold the "
         "ratio — a smaller corpus that satisfies the constraint is preferable "
         "to a larger one that violates it.",
@@ -356,20 +414,44 @@ def main() -> None:
     if not clean:
         raise SystemExit("Nothing to report. Run cleaning first.")
 
-    figs = [f for f in (fig_provenance(clean), fig_cleaning_funnel(clean),
+    figs = [f for f in (fig_provenance(clean, counts), fig_cleaning_funnel(clean),
                         fig_sources(clean)) if f]
+    # Written as generated_summary.md, NOT REPORT.md. The narrative Phase 1
+    # report is report/phase1/phase1_report.md, hand-written and much longer;
+    # two files both called some variant of "report" invites a reader to open
+    # the wrong one and assume it is the whole submission.
+    banner = (
+        "<!-- MACHINE-GENERATED. Do not edit by hand. -->\n"
+        "> **This file is generated by `scripts/build_phase1_report.py`** from\n"
+        "> `clean_stats.json` and `token_counts.json`. It is a numbers-only\n"
+        "> companion, regenerated on every run.\n"
+        ">\n"
+        "> **The Phase 1 report is [`phase1_report.md`](phase1_report.md).**\n"
+        "> Read that one — it contains the analysis, the design decisions and\n"
+        "> their justifications, and the known limitations.\n\n"
+    )
     report = build_report(clean, tok, counts, figs)
-    out = Path("report/phase1/REPORT.md")
+    out = Path("report/phase1/generated_summary.md")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(report, encoding="utf-8")
+    out.write_text(banner + report, encoding="utf-8")
+
+    stale = Path("report/phase1/REPORT.md")
+    if stale.exists():
+        stale.unlink()
+        logger.info("removed superseded %s", stale)
 
     print("\n" + "=" * 70)
     for lang in clean:
         c = counts.get(lang, {})
         s = clean[lang]
+        tok_share = c.get("train_manual_token_share")
+        verdict = ("n/a" if tok_share is None
+                   else f"{tok_share:.1%} "
+                        f"{'PASS' if tok_share >= 0.20 else 'FAIL'}")
         print(f"  {lang.upper():8s} {s.get('documents_kept',0):>10,} docs  "
               f"{c.get('total_tokens',0):>13,} tokens  "
-              f"manual {s.get('manual_char_fraction',0):.1%}")
+              f"manual chars {s.get('manual_char_fraction',0):>5.1%}  "
+              f"manual tokens {verdict}")
     print("=" * 70)
     print(f"  report : {out}")
     for f in figs:

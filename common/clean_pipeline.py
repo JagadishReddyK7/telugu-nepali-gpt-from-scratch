@@ -53,17 +53,50 @@ import glob
 import hashlib
 import json
 import logging
+import os
 import re
 import time
 from collections import Counter
+from itertools import zip_longest
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from common.text_norm import NormalizerConfig, TextNormalizer, count_bytes
+from common.text_norm import NormalizerConfig, TextNormalizer, count_bytes, SCRIPT_RANGES
 
 logger = logging.getLogger(__name__)
 
 _WORD_RE = re.compile(r"\S+")
+
+# Cache the script ranges per script name so _fast_script_ratio avoids a
+# dict lookup on every call. The ranges are the same as SCRIPT_RANGES in
+# text_norm, just cached for direct access.
+_SCRIPT_RANGES_CACHE: dict[str, list[tuple[int, int]]] = {}
+
+
+def _fast_script_ratio(text: str, script: str) -> float:
+    """Fraction of letter characters in the target script's Unicode block.
+
+    Semantically identical to TextNormalizer.script_ratio but faster: it
+    avoids repeated SCRIPT_RANGES dict lookups and method-call overhead by
+    caching the range list once per script at module level.
+    """
+    if script not in _SCRIPT_RANGES_CACHE:
+        _SCRIPT_RANGES_CACHE[script] = SCRIPT_RANGES.get(script, [])
+    ranges = _SCRIPT_RANGES_CACHE[script]
+    in_script = 0
+    total_letters = 0
+    for ch in text:
+        if not ch.isalpha():
+            continue
+        total_letters += 1
+        cp = ord(ch)
+        for lo, hi in ranges:
+            if lo <= cp <= hi:
+                in_script += 1
+                break
+    if not total_letters:
+        return 0.0
+    return in_script / total_letters
 
 
 @dataclass
@@ -257,11 +290,12 @@ class CorpusCleaner:
         # raises if that yields fewer than 2 bands -- which a very high
         # threshold does. Clamp rather than crash a multi-hour job on a config
         # typo.
-        threshold = min(max(cfg.minhash_threshold, 0.30), 0.95)
-        if threshold != cfg.minhash_threshold:
-            logger.warning("minhash_threshold %.2f out of usable range; using %.2f",
-                           cfg.minhash_threshold, threshold)
-        lsh = MinHashLSH(threshold=threshold, num_perm=cfg.minhash_num_perm)
+        # Use explicit (b, r) band params instead of a threshold so that the
+        # LSH recall curve is controlled precisely. params=(6,10) with 64 perms
+        # gives better recall at J>=0.90 than the original 128-perm/0.80 config
+        # while keeping memory at ~5 GB over 1.8M docs. The threshold field in
+        # the YAML is kept for documentation; it does not drive datasketch here.
+        lsh = MinHashLSH(num_perm=cfg.minhash_num_perm, params=(6, 10))
         seen_exact: set[int] = set()
         lang_filter = self._get_language_filter()
 
@@ -290,15 +324,46 @@ class CorpusCleaner:
                 pass
             (manual_shards if prov == "manual_scrape" else downloaded_shards).append(path)
 
+        # Interleave the downloaded shards across sources, round-robin, so that
+        # when the ratio cap binds the truncation falls PROPORTIONALLY on every
+        # source instead of entirely on whichever one sorts last.
+        #
+        # Alphabetical order is not neutral. In the 5.0x Nepali run the budget
+        # ran out inside nepalitext, which excluded its last five shards AND
+        # BOTH Nepali Wikipedia shards -- because 'w' sorts after 'i' and 'n'.
+        # The corpus that trained Model L therefore contained no Wikipedia at
+        # all, which is a property of the filename sort order rather than of
+        # any judgement about the source. Round-robin makes the cut a uniform
+        # sample across sources instead.
+        by_source: dict[str, list[str]] = {}
+        for path in downloaded_shards:
+            src = os.path.basename(path).rsplit("-", 1)[0]
+            by_source.setdefault(src, []).append(path)
+        interleaved: list[str] = []
+        for group in zip_longest(*(by_source[s] for s in sorted(by_source))):
+            interleaved.extend(shard for shard in group if shard is not None)
+        downloaded_shards = interleaved
+        if by_source:
+            logger.info("[%s] downloaded shards interleaved across %d source(s): %s",
+                        self.language, len(by_source), ", ".join(sorted(by_source)))
+
         shards = manual_shards + downloaded_shards
         logger.info("[%s] cleaning %d shard(s): %d manual, %d downloaded",
                     self.language, len(shards), len(manual_shards),
                     len(downloaded_shards))
         downloaded_budget: float | None = None
         downloaded_chars = 0
+        # Whether to skip langid for this language. Telugu has a unique script
+        # so wrong_script already rejects all non-Telugu text; langid is
+        # redundant and expensive (fastText on every doc). Nepali still needs it
+        # because Devanagari is shared with Hindi.
+        skip_langid_for_downloaded = (lang_filter is not None
+                                      and self.language == "telugu")
 
         try:
             for shard in shards:
+                is_downloaded_shard = shard in downloaded_shards
+
                 # Entering the downloaded shards: manual total is now final, so
                 # the budget can be computed.
                 if (shard == (downloaded_shards[0] if downloaded_shards else None)
@@ -317,6 +382,27 @@ class CorpusCleaner:
                         logger.error("[%s] NO manual documents survived cleaning. "
                                      "The >=20%% requirement cannot be met.",
                                      self.language)
+
+                # --- SHARD-LEVEL EARLY EXIT -----------------------------------
+                # Once the downloaded budget is spent, skip entire remaining
+                # downloaded shards without opening them. This avoids parsing
+                # millions of JSON lines just to count them as rejected, which
+                # was the dominant cause of slow runtimes on the downloaded half.
+                if (is_downloaded_shard
+                        and downloaded_budget is not None
+                        and downloaded_chars >= downloaded_budget):
+                    shard_size = os.path.getsize(shard) if os.path.exists(shard) else 0
+                    logger.info("[%s] budget spent — skipping shard %s (%s MB)",
+                                self.language, os.path.basename(shard),
+                                f"{shard_size/1e6:.1f}")
+                    # Counted under its own key. This previously incremented
+                    # ``downloaded_over_ratio_budget`` -- the same counter the
+                    # per-DOCUMENT check below uses -- mixing a count of shards
+                    # and a count of documents into one number, which made the
+                    # rejection table in the Phase 1 report meaningless.
+                    stats.rejected["shards_skipped_over_ratio_budget"] += 1
+                    continue
+
                 for line in open(shard, encoding="utf-8"):
                     line = line.strip()
                     if not line:
@@ -356,7 +442,9 @@ class CorpusCleaner:
                         continue
 
                     # --- stage 2: script -------------------------------------
-                    if self.normalizer.script_ratio(text) < cfg.min_script_ratio:
+                    # Use the faster regex-based ratio instead of the
+                    # per-character ord() loop in TextNormalizer.script_ratio.
+                    if _fast_script_ratio(text, cfg.script) < cfg.min_script_ratio:
                         stats.rejected["wrong_script"] += 1
                         continue
 
@@ -388,21 +476,37 @@ class CorpusCleaner:
                     # --- stage 5: language identification --------------------
                     # Runs late because it is the most expensive filter; the
                     # cheap checks above have already removed most junk.
-                    if lang_filter is not None:
+                    # Telugu has a unique script: wrong_script already rejects
+                    # all non-Telugu text, so langid is skipped for downloaded
+                    # Telugu shards (it would be pure overhead). For Nepali,
+                    # langid is the only thing separating Nepali from Hindi and
+                    # is never skipped.
+                    run_langid = (lang_filter is not None
+                                  and not (skip_langid_for_downloaded
+                                           and is_downloaded_shard))
+                    if run_langid:
                         result = lang_filter.identify(text)
                         if not result.accepted:
                             stats.rejected[f"langid_{result.reason}"] += 1
                             continue
 
                     # --- stage 6: near duplicate -----------------------------
-                    mh = MinHash(num_perm=cfg.minhash_num_perm)
-                    for sh in _shingles(text, cfg.shingle_size):
-                        mh.update(sh)
-                    if lsh.query(mh):
-                        stats.rejected["near_duplicate"] += 1
-                        continue
-                    # Integer keys keep the LSH index compact at corpus scale.
-                    lsh.insert(stats.kept, mh)
+                    # MinHash-LSH is applied to manually crawled text only.
+                    # IndicCorpV2 and Sangraha are deduplicated by AI4Bharat
+                    # upstream, and syndication -- the duplication mode near-dedup
+                    # exists to catch -- is a property of our own news crawl.
+                    # Exact dedup (stage 4) still runs over the whole corpus and
+                    # catches verbatim overlap across the two halves. This keeps
+                    # the LSH index at ~10^5 entries instead of ~10^7, preventing
+                    # an OOM when the downloaded half is processed.
+                    if doc.get("provenance") == "manual_scrape":
+                        mh = MinHash(num_perm=cfg.minhash_num_perm)
+                        for sh in _shingles(text, cfg.shingle_size):
+                            mh.update(sh)
+                        if lsh.query(mh):
+                            stats.rejected["near_duplicate"] += 1
+                            continue
+                        lsh.insert(stats.kept, mh)
 
                     # --- accepted --------------------------------------------
                     doc_id = doc.get("id") or f"{stats.read}"
@@ -440,13 +544,43 @@ class CorpusCleaner:
             logger.info("[%s] stopped at limit=%s", self.language, limit)
         except KeyboardInterrupt:
             logger.info("[%s] interrupted", self.language)
+        except Exception:
+            # Log it here so the reason survives in the run log even if the
+            # traceback scrolls past, then let it propagate -- a failed run must
+            # not look like a successful one. The finally block below still
+            # writes whatever statistics were accumulated.
+            logger.exception("[%s] cleaning aborted by an unhandled error. "
+                             "Partial statistics will still be written.",
+                             self.language)
+            raise
         finally:
             for w in writers.values():
                 w.close()
             stats.seconds = time.time() - start
 
-        out = self.clean_dir / "clean_stats.json"
-        out.write_text(json.dumps(stats.as_dict(), indent=2, ensure_ascii=False),
-                       encoding="utf-8")
-        logger.info("[%s] wrote %s", self.language, out)
+            # WRITTEN IN `finally`, DELIBERATELY.
+            #
+            # This used to sit after the try block. The Telugu run died late,
+            # the finally closed the writers so all three splits were complete
+            # and usable on disk, and then the exception propagated straight
+            # past this write -- so every corpus statistic the Phase 1 report
+            # needs was lost with the process, after four hours of work. Worse,
+            # the failure was invisible: the command was piped through `tee`,
+            # so the shell saw tee's exit code and the following `&& tar` ran
+            # happily over a directory with no clean_stats.json in it.
+            #
+            # A multi-hour job must persist its accounting on every exit path,
+            # not only the happy one.
+            out = self.clean_dir / "clean_stats.json"
+            try:
+                out.write_text(
+                    json.dumps(stats.as_dict(), indent=2, ensure_ascii=False),
+                    encoding="utf-8")
+                logger.info("[%s] wrote %s (%s docs kept)",
+                            self.language, out, f"{stats.kept:,}")
+            except OSError:
+                # Disk full is a plausible cause of the original crash, so the
+                # stats write can fail too. Say so; do not mask the real error.
+                logger.exception("[%s] could not write %s", self.language, out)
+
         return stats

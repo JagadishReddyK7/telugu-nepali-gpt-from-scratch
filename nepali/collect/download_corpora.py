@@ -11,17 +11,45 @@ Output lands in ``data/nepali/raw/*.jsonl`` with ``provenance="downloaded"``.
 
 BUDGET REASONING
 ----------------
-The Nepali target is deliberately lower than Telugu's. The crawl showed the
-manual share landing near 50M tokens: most Nepali news sites either blocked the
-crawler outright (403/429) or published no usable sitemap, leaving one outlet
-carrying almost the whole scrape. Since the spec requires at least 20% of final
-tokens to be manually collected, a 50M manual share caps the total corpus at
-about 250M tokens.
+SUPERSEDED PLAN, KEPT FOR THE RECORD. This file previously argued for a ~250M
+token Nepali target. The reasoning: the news crawl yielded only ~50M manual
+tokens, because most Nepali news sites either blocked the crawler (403/429) or
+published no usable sitemap, and a 50M manual share caps the corpus at 250M
+tokens under the spec's >=20% manual rule.
 
-That is not a failure to report apologetically -- it IS the result. Nepali is
-the lower-resource model, the spec explicitly permits collecting the maximum
-feasible amount with the exact count and a justification, and a 250M vs 500M
-split is a cleaner resource-tier contrast than forcing the two to match.
+The reasoning was sound but its premise expired. Widening the archive.org
+search past the ``language:("Nepali")`` metadata field -- to the ``nep`` alias,
+then to subject and collection queries that reach volumes whose language field
+is blank -- raised manual collection from ~50M to 614M characters of books, on
+top of ~51M from news. The manual share is no longer the constraint it was, so
+the 250M target is withdrawn and Nepali is aimed at the same ~500M as Telugu.
+
+CURRENT SIZING
+--------------
+The binding constraint is still the 20% rule, which is a CEILING as much as a
+floor: ``total_tokens <= manual_tokens / 0.20``. The cleaner enforces it as a
+character-ratio cap (``max_downloaded_to_manual_ratio: 5.4``), discarding
+surplus downloaded text rather than using it. So these budgets are sized to sit
+just past the point where that cap stops binding, and no further -- anything
+beyond it is downloaded, cleaned, and then thrown away.
+
+Working from measured constants (3.33 chars/token manual, 4.67 downloaded,
+~51% manual and ~87.5% downloaded survival through cleaning):
+
+    manual      740M raw chars ->   377M clean ->  113M manual tokens
+    downloaded 2,230M raw chars -> 1,951M clean ->  418M downloaded tokens
+                                          total ~531M tokens, 21.3% manual
+
+740M raw manual characters is the number that matters: at that point the ratio
+cap stops binding at any setting between 5.0 and 5.4, so the corpus size stops
+depending on a threshold that was picked by judgement. Collection stood at 666M
+when these budgets were set, so the manual side still needs roughly +74M
+characters. Run ``scripts/check_target.py --lang nepali`` for the live version
+of this arithmetic against what is actually on disk.
+
+Do not raise ``iriisnepal_corpus`` further without confirming the manual side
+kept pace. Past the cap, extra downloaded characters cost Colab download time
+and buy exactly zero tokens.
 
 THE HINDI PROBLEM
 -----------------
@@ -45,11 +73,14 @@ from common.hf_ingest import CorpusIngestor, SourceSpec, resolve_wikipedia_confi
 from common.run_crawl import setup_logging
 
 BUDGETS = {
-    "iriisnepal_corpus": 350_000_000,
-    "indiccorp_v2_ne": 200_000_000,
-    "nepalitext": 100_000_000,
+    # Raised 350M -> 1.25B. This is the only source with real headroom (6.4M
+    # docs / 27.5GB), so it absorbs the whole increase; the others are already
+    # near what they can supply without scraping the barrel for duplicates.
+    "iriisnepal_corpus": 1_250_000_000,
+    "indiccorp_v2_ne": 600_000_000,
+    "nepalitext": 300_000_000,
     "wikipedia_ne": 80_000_000,
-}
+}   # total 2,230M raw chars -- see CURRENT SIZING above before changing this
 
 
 def build_specs(scale: float = 1.0) -> list[SourceSpec]:
@@ -137,8 +168,12 @@ def main() -> None:
     summary = ingestor.ingest_all(specs, resume=not args.no_resume)
 
     total = sum(v.get("chars_kept", 0) for v in summary.values())
-    print(f"\nNepali downloaded share: {total:,} characters "
-          f"(~{total/3.2/1e6:.0f}M tokens at 3.2 chars/token)")
+    # 4.67 chars/token measured on downloaded Nepali text at vocab 16,000, and
+    # ~87.5% of these characters survive cleaning. The old 3.2 constant here
+    # overstated the yield by ~45%.
+    print(f"\nNepali downloaded share: {total:,} raw characters "
+          f"(~{total*0.875/4.67/1e6:.0f}M tokens after cleaning, "
+          f"before the 20% ratio cap)")
 
 
 if __name__ == "__main__":

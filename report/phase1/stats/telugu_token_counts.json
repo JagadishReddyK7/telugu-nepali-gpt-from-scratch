@@ -1,0 +1,77 @@
+{
+  "language": "telugu",
+  "tokenizer_model": "telugu_sp_16000.model",
+  "splits": {
+    "train": {
+      "split": "train",
+      "documents": 3099947,
+      "tokens": 666507564,
+      "characters": 2649468357,
+      "utf8_bytes": 7068029536,
+      "chars_per_token": 3.9752,
+      "bytes_per_token": 10.6046,
+      "tokens_per_provenance": {
+        "manual_scrape": 179057619,
+        "downloaded": 487449945
+      },
+      "documents_per_provenance": {
+        "manual_scrape": 201936,
+        "downloaded": 2898011
+      },
+      "manual_token_fraction": 0.2687,
+      "bin_file": "train.bin",
+      "bin_size_bytes": 1333015128
+    },
+    "validation": {
+      "split": "validation",
+      "documents": 19998,
+      "tokens": 3766723,
+      "characters": 14569901,
+      "utf8_bytes": 38880989,
+      "chars_per_token": 3.8681,
+      "bytes_per_token": 10.3222,
+      "tokens_per_provenance": {
+        "manual_scrape": 1807519,
+        "downloaded": 1959204
+      },
+      "documents_per_provenance": {
+        "manual_scrape": 2030,
+        "downloaded": 17968
+      },
+      "manual_token_fraction": 0.4799,
+      "bin_file": "validation.bin",
+      "bin_size_bytes": 7533446
+    },
+    "test": {
+      "split": "test",
+      "documents": 20000,
+      "tokens": 3902329,
+      "characters": 14997609,
+      "utf8_bytes": 39994637,
+      "chars_per_token": 3.8432,
+      "bytes_per_token": 10.2489,
+      "tokens_per_provenance": {
+        "manual_scrape": 1897494,
+        "downloaded": 2004835
+      },
+      "documents_per_provenance": {
+        "manual_scrape": 2157,
+        "downloaded": 17843
+      },
+      "manual_token_fraction": 0.4862,
+      "bin_file": "test.bin",
+      "bin_size_bytes": 7804658
+    }
+  },
+  "total_tokens": 674176616,
+  "total_utf8_bytes": 7146905162,
+  "overall_chars_per_token": 3.9738,
+  "train_tokens": 666507564,
+  "train_manual_tokens": 179057619,
+  "train_downloaded_tokens": 487449945,
+  "train_manual_token_share": 0.2687,
+  "corpus_manual_tokens": 182762632,
+  "corpus_manual_token_share": 0.2711,
+  "meets_20pct_manual_requirement": true,
+  "dtype": "uint16"
+}

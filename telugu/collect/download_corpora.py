@@ -38,10 +38,28 @@ from common.hf_ingest import CorpusIngestor, SourceSpec, resolve_wikipedia_confi
 from common.run_crawl import setup_logging
 
 # Characters, not tokens -- we cannot count tokens before the tokenizer exists.
+#
+# The earlier version of this comment worked backwards from 3.2 chars/token and
+# concluded ~1,506M characters were needed. That constant was wrong: measured
+# Telugu downloaded text runs 4.32 chars/token at vocab 16,000, so the old
+# arithmetic understated the requirement by ~35%. Redone with measured values:
+#
+#   manual, less the dead greatandhra crawl:  787M raw -> ~401M clean chars
+#   the cleaner caps downloaded at 4.5x that: ~1,805M clean chars
+#   at ~87.5% survival that needs:            ~2,063M raw chars
+#
+# These budgets total 2,350M, a ~14% margin over the cap. That margin is the
+# whole point: past 2,063M the ratio cap discards the surplus, so the budget is
+# sized to reach the cap reliably, not to exceed it. Raising these numbers does
+# not raise the token count -- only more MANUAL data does. Projection:
+# ~529M tokens at a 21.1% manual token share.
+#
+# The downloader resumes per source: raising a budget and re-running continues
+# from where it stopped rather than re-fetching.
 BUDGETS = {
-    "indiccorp_v2_te": 700_000_000,
-    "sangraha_te": 300_000_000,
-    "wikipedia_te": 200_000_000,
+    "indiccorp_v2_te": 1_400_000_000,
+    "sangraha_te": 700_000_000,
+    "wikipedia_te": 250_000_000,
 }
 
 
@@ -143,8 +161,12 @@ def main() -> None:
     summary = ingestor.ingest_all(specs, resume=not args.no_resume)
 
     total = sum(v.get("chars_kept", 0) for v in summary.values())
-    print(f"\nTelugu downloaded share: {total:,} characters "
-          f"(~{total/3.2/1e6:.0f}M tokens at 3.2 chars/token)")
+    # 4.32 chars/token measured on downloaded Telugu text at vocab 16,000, and
+    # ~87.5% of these characters survive cleaning. The old 3.2 constant here
+    # overstated the yield by ~35%.
+    print(f"\nTelugu downloaded share: {total:,} raw characters "
+          f"(~{total*0.875/4.32/1e6:.0f}M tokens after cleaning, "
+          f"before the 20% ratio cap)")
 
 
 if __name__ == "__main__":

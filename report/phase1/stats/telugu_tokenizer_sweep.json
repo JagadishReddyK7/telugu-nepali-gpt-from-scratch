@@ -1,0 +1,81 @@
+{
+  "language": "telugu",
+  "training_sample": {
+    "documents": 187367,
+    "bytes": 400000234,
+    "source": "data/telugu/clean/train.jsonl"
+  },
+  "eval_documents": 5000,
+  "settings": {
+    "model_type": "bpe",
+    "character_coverage": 0.9995,
+    "split_digits": true,
+    "byte_fallback": true,
+    "d_model_for_costing": 384,
+    "fertility_tolerance": 0.03
+  },
+  "sweep": [
+    {
+      "vocab_size": 8000,
+      "tokens": 1043924,
+      "words": 456766,
+      "chars": 3622425,
+      "bytes": 9671330,
+      "fertility": 2.2855,
+      "chars_per_token": 3.47,
+      "bytes_per_token": 9.2644,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 3072000,
+      "model_file": "telugu_sp_8000.model"
+    },
+    {
+      "vocab_size": 16000,
+      "tokens": 929381,
+      "words": 456766,
+      "chars": 3622425,
+      "bytes": 9671330,
+      "fertility": 2.0347,
+      "chars_per_token": 3.8977,
+      "bytes_per_token": 10.4062,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 6144000,
+      "model_file": "telugu_sp_16000.model"
+    },
+    {
+      "vocab_size": 24000,
+      "tokens": 876699,
+      "words": 456766,
+      "chars": 3622425,
+      "bytes": 9671330,
+      "fertility": 1.9194,
+      "chars_per_token": 4.1319,
+      "bytes_per_token": 11.0315,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 9216000,
+      "model_file": "telugu_sp_24000.model"
+    },
+    {
+      "vocab_size": 32000,
+      "tokens": 844554,
+      "words": 456766,
+      "chars": 3622425,
+      "bytes": 9671330,
+      "fertility": 1.849,
+      "chars_per_token": 4.2892,
+      "bytes_per_token": 11.4514,
+      "unk_tokens": 0,
+      "unk_rate": 0.0,
+      "embedding_params": 12288000,
+      "model_file": "telugu_sp_32000.model"
+    }
+  ],
+  "chosen_vocab_size": 16000,
+  "chosen_model": "telugu_sp_16000.model",
+  "chosen_vocab": "telugu_sp_32000.vocab",
+  "sweep_selected_vocab_size": 32000,
+  "chosen_vocab_file": "telugu_sp_16000.vocab",
+  "selection_note": "Vocabulary was set to 16,000 by scripts/reselect.py, overriding the sweep's selection of 32,000. The sweep selects on fertility and unknown-token rate; with byte_fallback enabled the UNK rate is identically 0.00 at every vocabulary size and carries no information, and fertility falls monotonically with vocabulary size, so that criterion applied literally always returns the largest candidate. The override selects on fertility per parameter spent: at d_model=384 a 32,000 vocabulary costs 12.29M tied embedding parameters against a ~25M total budget for Phase 2, versus 6.14M at 16,000. The fertility cost of the override is ~10%, and the smaller vocabulary yields MORE training tokens from the same corpus. See report/phase1 for the full argument."
+}

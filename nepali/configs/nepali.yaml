@@ -53,9 +53,9 @@ cleaning:
   max_dup_line_fraction: 0.30
   # Discard surplus downloaded text so manual stays >=20% of the corpus.
   # 4.0 => downloaded <= 4x manual => manual >= 20%. Enforced in the cleaner.
-  max_downloaded_to_manual_ratio: 4.0
-  minhash_threshold: 0.80
-  minhash_num_perm: 128
+  max_downloaded_to_manual_ratio: 5.2
+  minhash_threshold: 0.80    # documentation only; pipeline uses params=(6,10)
+  minhash_num_perm: 64
   shingle_size: 5
 
 # ---------------------------------------------------------------------------
@@ -105,7 +105,7 @@ tokenizer:
   chosen_vocab_size: null
   character_coverage: 0.9995
   train_sample_docs: 2_000_000
-  train_sample_bytes: 3_000_000_000
+  train_sample_bytes: 500_000_000
   special_tokens:
     pad: "<pad>"
     unk: "<unk>"

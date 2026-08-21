@@ -1,0 +1,76 @@
+{
+  "documents_read": 4053265,
+  "documents_kept": 2152701,
+  "keep_rate": 0.5311,
+  "rejected_by_reason": {
+    "too_short": 943796,
+    "exact_duplicate": 872618,
+    "downloaded_over_ratio_budget": 24541,
+    "langid_wrong_language:hi": 14195,
+    "langid_wrong_language:sa": 11775,
+    "langid_low_confidence": 11369,
+    "wrong_script": 8755,
+    "mostly_short_lines": 8362,
+    "near_duplicate": 1662,
+    "repeated_lines_boilerplate": 1539,
+    "langid_wrong_language:mr": 947,
+    "langid_wrong_language:new": 826,
+    "langid_wrong_language:en": 62,
+    "langid_wrong_language:da": 49,
+    "too_long_listing_page": 20,
+    "bad_mean_word_length": 18,
+    "langid_wrong_language:ru": 12,
+    "shards_skipped_over_ratio_budget": 11,
+    "langid_wrong_language:hu": 4,
+    "langid_wrong_language:mai": 4,
+    "langid_wrong_language:km": 3,
+    "empty_after_normalization": 2,
+    "langid_wrong_language:gom": 2,
+    "langid_wrong_language:cs": 1,
+    "langid_wrong_language:ko": 1,
+    "langid_wrong_language:mk": 1
+  },
+  "chars_kept": 2220405505,
+  "bytes_kept": 5917382353,
+  "documents_per_source": {
+    "indiccorp_v2_ne": 908703,
+    "iriisnepal_corpus": 718907,
+    "nepalitext": 441317,
+    "archive_org_books": 37733,
+    "nepalpress": 23707,
+    "wikipedia_ne": 19412,
+    "karobardaily": 2579,
+    "mofa_gov": 103,
+    "bbc_nepali": 85,
+    "nagariknews": 60,
+    "nepalipatra": 49,
+    "thahakhabar": 13,
+    "opmcm_gov": 8,
+    "himalkhabar": 7,
+    "moest_gov": 6,
+    "nepalsamaya": 5,
+    "lawcommission": 4,
+    "baahrakhari": 2,
+    "setopati": 1
+  },
+  "documents_per_provenance": {
+    "manual_scrape": 64362,
+    "downloaded": 2088339
+  },
+  "chars_per_provenance": {
+    "manual_scrape": 358129769,
+    "downloaded": 1862275736
+  },
+  "manual_char_fraction": 0.1613,
+  "split_documents": {
+    "train": 2112701,
+    "validation": 20000,
+    "test": 20000
+  },
+  "split_chars": {
+    "train": 2177294897,
+    "validation": 21496549,
+    "test": 21614059
+  },
+  "seconds": 4597.5
+}

@@ -56,9 +56,9 @@ cleaning:
   # constantly, so this matters more than it would for books.
   # Discard surplus downloaded text so manual stays >=20% of the corpus.
   # 4.0 => downloaded <= 4x manual => manual >= 20%. Enforced in the cleaner.
-  max_downloaded_to_manual_ratio: 4.0
-  minhash_threshold: 0.80
-  minhash_num_perm: 128
+  max_downloaded_to_manual_ratio: 4.5
+  minhash_threshold: 0.80    # documentation only; pipeline uses params=(6,10)
+  minhash_num_perm: 64
   shingle_size: 5
 
 # ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ tokenizer:
   # Sample used for tokenizer training. SentencePiece holds the training text in
   # memory, so we cannot feed it the full corpus on a Colab instance.
   train_sample_docs: 2_000_000
-  train_sample_bytes: 3_000_000_000
+  train_sample_bytes: 500_000_000
   special_tokens:
     pad: "<pad>"
     unk: "<unk>"

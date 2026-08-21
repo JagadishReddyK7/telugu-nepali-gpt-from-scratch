@@ -1,0 +1,46 @@
+{
+  "documents_kept": 3139945,
+  "chars_kept": 2679035867,
+  "bytes_kept": 7146905162,
+  "documents_per_source": {
+    "indiccorp_v2_te": 2558275,
+    "sangraha_te": 337524,
+    "v6velugu": 117237,
+    "archive_org_books": 39339,
+    "wikipedia_te": 38023,
+    "prabhanews": 33436,
+    "10tv": 11000,
+    "sakshi": 1358,
+    "andhrajyothy": 1207,
+    "ntnews": 955,
+    "tv9telugu": 850,
+    "ntvtelugu": 543,
+    "telugu_samayam": 198
+  },
+  "documents_per_provenance": {
+    "manual_scrape": 206123,
+    "downloaded": 2933822
+  },
+  "chars_per_provenance": {
+    "manual_scrape": 589327781,
+    "downloaded": 2089708086
+  },
+  "manual_char_fraction": 0.22,
+  "split_documents": {
+    "train": 3099947,
+    "validation": 19998,
+    "test": 20000
+  },
+  "split_chars": {
+    "train": 2649468357,
+    "validation": 14569901,
+    "test": 14997609
+  },
+  "malformed_lines_encountered": 0,
+  "documents_read": 6900000,
+  "keep_rate": 0.4551,
+  "rejected_by_reason": {},
+  "seconds": 0.0,
+  "reconstructed": true,
+  "reconstruction_note": "Rebuilt from the written splits by scripts/rebuild_clean_stats.py after the cleaning run terminated before writing clean_stats.json. All kept-side figures (document counts, characters, bytes, per-source and per-provenance breakdowns, split sizes) are exact — they are recomputed from the documents themselves. 'documents_read' is a LOWER BOUND taken from the last progress line in the run log; the true value is unknown. 'rejected_by_reason' is empty because those counters existed only in memory and were lost with the process; it is not reported as zero rejections. 'keep_rate' inherits the lower-bound caveat and is an UPPER bound on the true keep rate."
+}

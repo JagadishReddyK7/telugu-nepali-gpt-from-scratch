@@ -71,6 +71,12 @@ def encode_split(
 
     out_bin.parent.mkdir(parents=True, exist_ok=True)
     n_docs = n_tokens = n_chars = n_bytes = 0
+    # The spec requires the manual vs downloaded split in TOKENS, not
+    # characters. This is the only full tokenization pass over the corpus, so
+    # the split is accumulated here rather than in a separate script that would
+    # have to re-encode the whole corpus to learn the same thing.
+    tokens_by_provenance: dict[str, int] = {}
+    docs_by_provenance: dict[str, int] = {}
 
     with out_bin.open("wb") as out:
         for line in jsonl_path.open(encoding="utf-8"):
@@ -78,9 +84,10 @@ def encode_split(
             if not line:
                 continue
             try:
-                text = json.loads(line).get("text", "")
+                record = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            text = record.get("text", "")
             if not text:
                 continue
 
@@ -89,6 +96,16 @@ def encode_split(
                 ids = [bos] + ids + [eos]
 
             np.asarray(ids, dtype=np.uint16).tofile(out)
+
+            # Anything not explicitly tagged manual counts as downloaded, so a
+            # missing or malformed provenance tag can only ever UNDERSTATE the
+            # manual share. The compliance number is never flattered by a bad
+            # record.
+            prov = ("manual_scrape"
+                    if record.get("provenance") == "manual_scrape"
+                    else "downloaded")
+            tokens_by_provenance[prov] = tokens_by_provenance.get(prov, 0) + len(ids)
+            docs_by_provenance[prov] = docs_by_provenance.get(prov, 0) + 1
 
             n_docs += 1
             n_tokens += len(ids)
@@ -111,6 +128,10 @@ def encode_split(
         # differently: perplexity per token is not comparable across
         # vocabularies, but loss per byte of source text is.
         "bytes_per_token": round(n_bytes / max(n_tokens, 1), 4),
+        "tokens_per_provenance": tokens_by_provenance,
+        "documents_per_provenance": docs_by_provenance,
+        "manual_token_fraction": round(
+            tokens_by_provenance.get("manual_scrape", 0) / max(n_tokens, 1), 4),
         "bin_file": out_bin.name,
         "bin_size_bytes": out_bin.stat().st_size,
     }
@@ -148,6 +169,20 @@ def encode_corpus(language: str, data_root: Path, model_path: Path) -> dict:
 
     total_tokens = sum(s["tokens"] for s in per_split.values())
     total_bytes = sum(s["utf8_bytes"] for s in per_split.values())
+
+    # ---- the compliance number ------------------------------------------
+    # The spec requires ">=20% of the final TRAINING tokens" to be manually
+    # collected, so the gate is computed on the train split alone. The
+    # corpus-wide figure is reported alongside it for completeness, but train
+    # is the one that decides pass or fail.
+    train = per_split.get("train", {})
+    train_prov = train.get("tokens_per_provenance", {})
+    train_manual = train_prov.get("manual_scrape", 0)
+    train_total = train.get("tokens", 0)
+
+    all_manual = sum(s.get("tokens_per_provenance", {}).get("manual_scrape", 0)
+                     for s in per_split.values())
+
     report = {
         "language": language,
         "tokenizer_model": model_path.name,
@@ -157,10 +192,23 @@ def encode_corpus(language: str, data_root: Path, model_path: Path) -> dict:
         "overall_chars_per_token": round(
             sum(s["characters"] for s in per_split.values())
             / max(total_tokens, 1), 4),
+        "train_tokens": train_total,
+        "train_manual_tokens": train_manual,
+        "train_downloaded_tokens": train_prov.get("downloaded", 0),
+        "train_manual_token_share": round(train_manual / max(train_total, 1), 4),
+        "corpus_manual_tokens": all_manual,
+        "corpus_manual_token_share": round(all_manual / max(total_tokens, 1), 4),
+        "meets_20pct_manual_requirement":
+            (train_manual / max(train_total, 1)) >= 0.20,
         "dtype": "uint16",
     }
     out = out_dir / "token_counts.json"
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     logger.info("[%s] EXACT TOTAL: %s tokens. Wrote %s",
                 language, f"{total_tokens:,}", out)
+    logger.info("[%s] train manual token share: %.2f%% (%s / %s) -- %s",
+                language, report["train_manual_token_share"] * 100,
+                f"{train_manual:,}", f"{train_total:,}",
+                "MEETS >=20%" if report["meets_20pct_manual_requirement"]
+                else "BELOW 20% -- REQUIREMENT NOT MET")
     return report

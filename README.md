@@ -17,6 +17,8 @@ each), built from scratch in PyTorch:
 The two models share **code** but never share **artifacts**. No document, token,
 vocabulary entry, or weight crosses between them.
 
+**Phase 1 results and methodology: [`report/phase1/phase1_report.md`](report/phase1/phase1_report.md).**
+
 ---
 
 ## Google Drive artifacts
@@ -26,14 +28,14 @@ vocabulary entry, or weight crosses between them.
 
 | Artifact | Link |
 |---|---|
-| Telugu corpus (cleaned, split) | _TBD_ |
-| Nepali corpus (cleaned, split) | _TBD_ |
-| Telugu tokenized binaries | _TBD_ |
-| Nepali tokenized binaries | _TBD_ |
-| Model H pretrained checkpoint | _TBD_ |
-| Model L pretrained checkpoint | _TBD_ |
-| Model H finetuned checkpoint | _TBD_ |
-| Model L finetuned checkpoint | _TBD_ |
+| Telugu corpus (cleaned, split) | https://drive.google.com/file/d/1Tq4bJVNKWD7w0NZQaGKoHItLPo0tDDoJ/view?usp=sharing |
+| Nepali corpus (cleaned, split) | https://drive.google.com/file/d/1p6VeQASStY5Zq2QhDxoWSgaiFdlNaR6v/view?usp=drive_link |
+| Telugu tokenized binaries | https://drive.google.com/file/d/1QvooM9ULBjNfydmfIxHH-h407MF49W4z/view?usp=drive_link |
+| Nepali tokenized binaries | https://drive.google.com/file/d/1Jb2sP8OCDN_jttmy1xMB5jR8ZDQWbyu7/view?usp=drive_link |
+| Model H pretrained checkpoint | Phase 2 |
+| Model L pretrained checkpoint | Phase 2 |
+| Model H finetuned checkpoint | Phase 3 |
+| Model L finetuned checkpoint | Phase 3 |
 
 ---
 
@@ -77,10 +79,11 @@ running a multi-day crawl there means restarting it constantly.
 | Tokenizer training | **Colab** | SentencePiece is memory-hungry. |
 | Pretraining / finetuning | **Colab (T4)** | Needs the GPU. |
 
-**Raw corpora never go to Drive.** They are tens of GB and the free tier is 15GB.
-Only tokenized `uint16` binaries (~1GB per language) and checkpoints are persisted;
-raw text stays re-derivable from these scripts, which is what makes the project
-reproducible rather than merely archived.
+**Raw corpora are not committed to git** — they are tens of GB, and GitHub
+rejects any file over 100MB. Cleaned splits and tokenized `uint16` binaries
+(~1GB per language) are persisted to Drive and linked above; raw text stays
+re-derivable from these scripts, which is what makes the project reproducible
+rather than merely archived.
 
 ---
 
@@ -113,17 +116,135 @@ python -m nepali.collect.scrape_news --run
 Run the two in separate terminals so they proceed in parallel. Output accumulates
 in `data/<lang>/raw/*.jsonl`, every record tagged `provenance="manual_scrape"`.
 
-### 2. Download the public corpora
+### 2. Collect books from archive.org
 
-_Scripts land in step 2 of the build — see `telugu/collect/` and `nepali/collect/`._
+Public-domain OCR'd volumes, the larger half of the manual share. Search by
+subject and collection, not by language metadata alone — see the Phase 1 report
+§3.2 for why that distinction found an order of magnitude more text.
 
-### 3. Clean, deduplicate, split
+```bash
+python collect_books_bysubject.py --lang telugu --target-chars 250000000
+python collect_books_bysubject.py --lang nepali  --target-chars 250000000
+# add --delay 3.0 --per-query 1500 if archive.org throttles with ConnectTimeout
+```
 
-_See `telugu/clean/` and `nepali/clean/`._
+Check progress at any point:
 
-### 4. Train tokenizers
+```bash
+python scripts/check_target.py --lang nepali --target 500
+```
 
-_See `telugu/tokenizer/` and `nepali/tokenizer/`._
+That tool projects the post-cleaning token count under two manual-survival
+scenarios and reports which constraint binds — supply, or the ≥20% manual rule
+acting as a ceiling. Plan against the `observed` scenario.
+
+### 3. Download the public corpora
+
+```bash
+python -m telugu.collect.download_corpora
+python -m nepali.collect.download_corpora
+python -m telugu.collect.download_corpora --scale 0.02   # smoke test
+```
+
+Budgets are sized to just reach the ratio cap and stop; the reasoning is in each
+module's docstring. Raising them past that point buys zero tokens.
+
+### 4. Clean, deduplicate, split
+
+```bash
+python -m telugu.clean.run_clean
+python -m nepali.clean.run_clean
+```
+
+One streaming pass: normalize → filter → exact dedup → language ID → near dedup
+→ split. Dedup runs *before* splitting and splits are document-level; both
+choices prevent train/test leakage rather than serving efficiency.
+
+Each run writes `data/<lang>/clean/{train,validation,test}.jsonl` plus
+`clean_stats.json`. **Redirect to a local file, not straight to Drive** — a
+long run piped through `tee` to a Drive mount can lose the pipe and take the
+process with it:
+
+```bash
+python -m nepali.clean.run_clean 2>&1 | tee /content/nepali_clean.log
+```
+
+Runtime: ~75 min for Nepali, ~4.5 h for Telugu on a Colab CPU instance.
+
+> If a run dies before writing `clean_stats.json`, the splits on disk are still
+> complete. `python scripts/rebuild_clean_stats.py --lang <lang> --log <logfile>`
+> recomputes every kept-side statistic exactly from them. Per-reason rejection
+> counters cannot be recovered and are reported as unavailable — see report §9.1.
+
+### 5. Train tokenizers and select the vocabulary
+
+```bash
+python -m telugu.tokenizer.train_tokenizer --sample-bytes 400000000
+python scripts/reselect.py --lang telugu --vocab 16000 --yes
+
+python -m nepali.tokenizer.train_tokenizer --sample-bytes 400000000
+python scripts/reselect.py --lang nepali --vocab 16000 --yes
+```
+
+`--sample-bytes 400000000` is required: SentencePiece holds its training sample
+in RAM, and the YAML default (500MB Nepali / 400MB Telugu) is sized for a machine
+with more headroom than a free Colab instance.
+
+`scripts/reselect.py` is also required. The sweep selects on fertility and UNK
+rate, but `byte_fallback: true` makes the UNK rate identically 0.00 at every
+vocabulary size, and fertility falls monotonically — so that criterion always
+returns the largest candidate, 32,000. At `d_model=384` a 32k vocabulary spends
+12.29M of the ~25M parameter budget on tied embeddings. `reselect.py` overrides
+to 16,000 and records the full argument in `tokenizer_sweep.json`. See report §6.1.
+
+### 6. Encode and build the report
+
+```bash
+python scripts/build_phase1_report.py
+```
+
+This encodes both corpora to `uint16` `.bin` files, writes `token_counts.json`
+with the exact token counts and the manual/downloaded **token** split, generates
+the figures, and writes `report/phase1/generated_summary.md`.
+
+Pass `--skip-encode` to reuse existing `token_counts.json` files and only rebuild
+the report and figures.
+
+### 7. Token-frequency statistics and tokenization examples
+
+```bash
+python scripts/token_stats.py --lang telugu
+python scripts/token_stats.py --lang nepali
+```
+
+Counts every token id across the encoded `train.bin`, writes
+`report/phase1/stats/<lang>_token_frequency.json` and a Zipf/coverage figure, and
+decodes sample documents back out of the binary so the printed examples are
+provably what was encoded. Covers the vocabulary-size, token-frequency,
+chars-per-token, examples and UNK statistics that Phase 1 §1.3 asks for.
+
+---
+
+## Phase 1 results
+
+Full analysis: **[`report/phase1/phase1_report.md`](report/phase1/phase1_report.md)**.
+Machine-generated numbers-only companion:
+[`report/phase1/generated_summary.md`](report/phase1/generated_summary.md).
+
+| | Model H — Telugu | Model L — Nepali |
+|---|---|---|
+| Total tokens | 674,176,616 | 511,303,554 |
+| Training tokens | 666,507,564 | 501,331,128 |
+| Manual token share | **26.87%** ✅ | **21.78%** ✅ |
+| Documents after cleaning | 3,139,945 | 2,152,701 |
+| Vocabulary | 16,000 | 16,000 |
+| UNK rate (measured) | 0.00e+00 | 0.00e+00 |
+
+Both exceed the ~500M target and both clear the ≥20% manual requirement, which
+the spec states in **tokens** — and which is measured in tokens here, during the
+encoding pass, not inferred from a character proxy.
+
+---
 
 ---
 
@@ -131,7 +252,7 @@ _See `telugu/tokenizer/` and `nepali/tokenizer/`._
 
 | Phase | Branch | Deadline | Marks |
 |---|---|---|---|
-| 1 — Data + Tokenizers | `phase-1` | 19 Aug 2026 | 25 |
+| 1 — Data + Tokenizers | `phase-1` | 21 Aug 2026 | 25 |
 | 2 — Model + Pretraining + Eval | `phase-2` | 5 Sep 2026 | 40 |
 | 3 — Reasoning Finetune + Attention + Report | `phase-3` | 16 Sep 2026 | 35 |
 
