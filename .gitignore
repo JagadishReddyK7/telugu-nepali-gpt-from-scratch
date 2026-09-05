@@ -41,6 +41,11 @@ models/*.partial
 !report/**/*.json
 !report/**/*.png
 !report/**/*.md
+# Phase 2 training logs are .jsonl and live under report/. `*.jsonl` is
+# excluded above for corpora, and `!report/**/*.json` does NOT match `.jsonl` --
+# so without this line the loss curves, a named Phase 2 deliverable, are
+# silently uncommittable.
+!report/**/*.jsonl
 
 # ---- Transfer archives ------------------------------------------------------
 # Hundreds of MB each; GitHub hard-rejects anything over 100MB, so a single

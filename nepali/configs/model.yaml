@@ -1,0 +1,104 @@
+# =============================================================================
+# Model L — Nepali.  Phase 2 architecture and pretraining configuration.
+#
+# This file is the single source of truth for Model H's shape and its training
+# schedule. It is written into every checkpoint, so a checkpoint can always be
+# rebuilt into the exact model that produced it without consulting this file.
+#
+# Model H (telugu/configs/model.yaml) has the SAME shape but is a completely
+# separate model: separate weights, separate vocabulary, separate optimizer
+# state. Nothing is initialized from the other.
+# =============================================================================
+
+name: model_l_nepali
+language: nepali
+
+# ---------------------------------------------------------------- architecture
+model:
+  # vocab_size is read from the Phase 1 tokenizer at build time rather than
+  # hard-coded, so the model can never silently disagree with the .model file.
+  vocab_size: 16000          # nepali_sp_16000.model
+
+  d_model: 384
+  n_layer: 11
+  n_head: 6                  # d_head = 384 / 6 = 64
+  d_ff: 1536                 # 4 x d_model
+  block_size: 512
+  dropout: 0.1
+  bias: true
+
+  # Tie the output projection to the token embedding. Saves vocab x d_model =
+  # 6,144,000 parameters, ~24% of the model. See Phase 1 report §6.1 for why
+  # that budget mattered enough to pick a 16k vocabulary over the sweep's 32k.
+  tie_embeddings: true
+
+  # "learned" = learned absolute positional embeddings, one row per position.
+  # This HARD-CAPS sequence length at block_size: there is no embedding row for
+  # position 512, so longer inputs cannot be encoded at all.
+  # Set to "none" for the bonus ablation.
+  positional: learned
+
+# Resulting parameter count (verified by scripts/model_summary.py):
+#   token embedding        6,144,000   (tied with the output head)
+#   positional embedding     196,608
+#   11 blocks x 1,774,464 19,519,104
+#   final layernorm              768
+#   ---------------------------------
+#   total                 25,860,480   ~25M target
+#   non-embedding         19,519,872
+
+# ------------------------------------------------------------------- training
+train:
+  # Effective batch = batch_size x grad_accum x block_size tokens per step.
+  # 32 x 2 x 512 = 32,768 tokens/step.
+  #
+  # The split was chosen by measurement on the target GPU (Kaggle T4, 15.6GB),
+  # holding the effective batch constant so the optimization trajectory is
+  # identical in all three cases:
+  #
+  #     16 x 4   30,686 tok/s   5.11 GB   4.53 h per 500M tokens
+  #     32 x 2   34,510 tok/s   9.68 GB   4.02 h   <- chosen
+  #     64 x 1   out of memory
+  #
+  # Larger micro-batches feed the GPU better, but 64 x 1 needs roughly twice
+  # 32 x 2's activations and does not fit. Tune batch_size to the GPU and move
+  # grad_accum the other way to keep the product at 64.
+  batch_size: 32
+  grad_accum: 2
+
+  # One pass over the 501,331,128-token Nepali training split.
+  max_tokens: 500_000_000
+
+  # AdamW. beta2=0.95 rather than the 0.999 default: shorter second-moment
+  # memory suits the noisier gradients of a small-batch LM run.
+  learning_rate: 6.0e-4
+  min_learning_rate: 6.0e-5
+  warmup_tokens: 10_000_000      # ~2% of the run
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+  lr_schedule: cosine
+
+  # Mixed precision. A T4 supports fp16 tensor cores but not bf16, so fp16 with
+  # a GradScaler is the correct choice there; on Ampere or newer prefer bf16,
+  # which needs no scaler.
+  dtype: float16
+
+  seed: 2718                     # same seed as the Phase 1 Nepali split
+
+# ----------------------------------------------------------------- evaluation
+eval:
+  eval_interval_steps: 500
+  eval_batches: 50               # batches of held-out data per evaluation
+  checkpoint_interval_steps: 500
+  log_interval_steps: 20
+
+# ------------------------------------------------------------------- io paths
+paths:
+  tokenizer: nepali/tokenizer/nepali_sp_16000.model
+  train_bin: data/nepali/tokenized/train.bin
+  val_bin: data/nepali/tokenized/validation.bin
+  test_bin: data/nepali/tokenized/test.bin
+  out_dir: checkpoints/nepali
+  log_file: report/phase2/logs/nepali_train.jsonl
