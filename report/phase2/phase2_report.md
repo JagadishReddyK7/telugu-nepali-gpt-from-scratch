@@ -640,29 +640,61 @@ this particular corpus is for a model of this size** — a joint property of the
 language, the corpus, and the model. The corpus term dominates at 25M
 parameters.
 
-### 5.3 Hypotheses, with the evidence available
+### 5.3 Hypotheses, and what the Phase 1 data does to them
 
-**(a) Corpus heterogeneity — the leading explanation.** Phase 1's Telugu corpus
-draws on more sources and more genres, including OCR'd book text, than the
-Nepali corpus, which is concentrated in news, Wikipedia and IndicCorp. A more
-heterogeneous corpus has higher intrinsic entropy: the model must cover more
-registers, more topic distributions and more orthographic conventions with the
-same 25M parameters. Higher entropy in the data floor shows up directly as
-higher BPB regardless of how good the model is.
+**(a) Genre composition — the leading explanation.** The two manual collections
+have opposite genre balances, recorded in the Phase 1 report:
 
-**(b) OCR noise in the Telugu manual collection.** Telugu's ≥20% manual fraction
-came substantially from OCR of scanned books. OCR errors are, by definition,
-*unpredictable* — they are noise the model cannot learn to anticipate, and every
-such character contributes near-maximal surprisal. A few percent of OCR-corrupted
-tokens is enough to move BPB measurably. This is the most testable hypothesis
-and the one most likely to be actionable in Phase 3.
+| manual collection | news documents | book documents | dominant genre |
+|---|---:|---:|---|
+| Telugu | 167,000 | 39,000 | **news** (~81%) |
+| Nepali | 26,600 | 37,733 | **books** (~59%) |
 
-**(c) Script and orthographic inventory.** Telugu's writing system has a larger
-inventory of distinct surface forms (complex conjuncts, a wide akshara space)
+This is the most likely driver. Book prose is long-form, single-register and
+internally coherent: one author, one topic, sustained syntax over thousands of
+tokens. News is the opposite — dense in named entities, numerals, dates and
+place names, with a hard topic reset at every article boundary. Named entities
+and numerals are close to irreducible surprisal for a 25M-parameter model, since
+there is nothing in the context that predicts *which* name or *which* number
+comes next. A news-dominated corpus therefore has a higher entropy floor than a
+book-dominated one, independently of how good the model is.
+
+Telugu's corpus is news-dominated in its manual half and web-crawl in its
+downloaded half; Nepali's manual half is book-dominated. That is exactly the
+direction needed to explain a 19% BPB gap.
+
+**(b) OCR noise — this hypothesis is ruled out by the data.** The natural first
+guess is that OCR errors in scanned book text inflated Telugu's loss, since OCR
+output is unpredictable by construction and every corrupted character
+contributes near-maximal surprisal. The Phase 1 composition numbers eliminate
+it: **Nepali's manual collection is proportionally about three times more
+book-derived — and therefore more OCR-derived — than Telugu's**, and Nepali
+still scores 19% better in bits per byte. If OCR noise were the dominant term,
+the ranking would be reversed.
+
+Worth stating explicitly in the report rather than quietly dropping, because it
+is a hypothesis the corpus statistics actively refute rather than one that was
+never considered.
+
+**(c) Tokenizer fertility narrows the effective context.** Telugu encodes at
+3.974 characters per token against Nepali's 4.343 (Phase 1 §4). Bits-per-byte
+divides this out of the *loss*, but it does not divide it out of the *context
+window*: at `block_size = 512`, Model H sees
+
+$$512 \times 3.974 = 2{,}035 \text{ characters}$$
+
+of context against Model L's $512 \times 4.343 = 2{,}224$ — about **9% less
+text per window** for the same compute. A smaller effective context is a real
+disadvantage, though 9% is unlikely to account for a 19% BPB gap on its own.
+
+**(d) Script and orthographic inventory.** Telugu's writing system has a larger
+inventory of distinct surface forms — complex conjuncts, a wide akshara space —
 than Devanagari as used for Nepali. More distinct surface forms at the same
-vocabulary size means more probability mass spread thinner.
+16,000-entry vocabulary means probability mass spread thinner. Plausible, but
+partially entangled with (c), since fertility is itself a consequence of
+orthography.
 
-**(d) Corpus utilisation is *not* the explanation, despite appearances.** Telugu
+**(e) Corpus utilisation is *not* the explanation, despite appearances.** Telugu
 saw only 75% of its available training data against Nepali's 99.7%. This looks
 like it should favour Nepali — but both runs are strictly single-pass, so
 neither model ever saw a token twice, and unused data cannot help a run that
@@ -671,17 +703,23 @@ run, not to this one.
 
 ### 5.4 How to test this
 
-The distinguishing experiment is cheap and does not require training anything:
-compute the **unigram and bigram entropy of each corpus** at the character and
-token level, using the machinery already in `scripts/token_stats.py` from
-Phase 1. If Telugu's corpus has measurably higher $n$-gram entropy, hypothesis
-(a) is supported and the model gap is largely a data-floor gap. If the corpus
-entropies are similar, the difference is attributable to the model's ability to
-exploit structure, and (b) or (c) become the better explanations.
+The distinguishing experiment is cheap and requires training nothing: **score
+each model separately on the news-derived and book-derived portions of its own
+validation split.** Provenance tags are already recorded per document from
+Phase 1, so the split costs only a filter.
 
-A second, more direct test of (b): score the Telugu model separately on the
-OCR-derived and non-OCR portions of the validation split. A large BPB gap
-between them would localise the penalty to OCR noise specifically.
+Hypothesis (a) predicts a specific pattern: both models should show markedly
+higher BPB on their news partition than on their books partition, and Telugu's
+overall figure should sit closer to its news number because news dominates its
+corpus. If instead the two partitions score similarly within each language, (a)
+is wrong and (c)/(d) become the better explanations.
+
+A second, independent check: compute the **unigram and bigram entropy of each
+corpus** at the character level using `scripts/token_stats.py` from Phase 1. If
+the Telugu corpus has measurably higher character-level entropy, the gap is
+largely a data-floor property rather than a modelling failure — and 0.577 BPB
+would then be close to the best any 25M-parameter model could do on that
+corpus.
 
 ### 5.5 What both models share
 
