@@ -17,7 +17,8 @@ each), built from scratch in PyTorch:
 The two models share **code** but never share **artifacts**. No document, token,
 vocabulary entry, or weight crosses between them.
 
-**Phase 1 results and methodology: [`report/phase1/phase1_report.md`](report/phase1/phase1_report.md).**
+**Phase 1 — data and tokenizers: [`report/phase1/phase1_report.md`](report/phase1/phase1_report.md).**
+**Phase 2 — model, pretraining and evaluation: [`report/phase2/phase2_report.md`](report/phase2/phase2_report.md).**
 
 ---
 
@@ -32,8 +33,10 @@ vocabulary entry, or weight crosses between them.
 | Nepali corpus (cleaned, split) | https://drive.google.com/file/d/1p6VeQASStY5Zq2QhDxoWSgaiFdlNaR6v/view?usp=drive_link |
 | Telugu tokenized binaries | https://drive.google.com/file/d/1QvooM9ULBjNfydmfIxHH-h407MF49W4z/view?usp=drive_link |
 | Nepali tokenized binaries | https://drive.google.com/file/d/1Jb2sP8OCDN_jttmy1xMB5jR8ZDQWbyu7/view?usp=drive_link |
-| Model H pretrained checkpoint | Phase 2 |
-| Model L pretrained checkpoint | Phase 2 |
+| Model H pretrained checkpoint — `best.pt` | https://drive.google.com/file/d/1X2H_1newxrC2tzLq_GBRuTCl5h2u54Hb/view?usp=drive_link |
+| Model H pretrained checkpoint — `latest.pt` | https://drive.google.com/file/d/1-YkgfnZGoUuEchN55d2ek79AjtzOxApu/view?usp=drive_link |
+| Model L pretrained checkpoint — `best.pt` | https://drive.google.com/file/d/1NRc9J41AFgg_toV7Kzd_16gfESv7aLM5/view?usp=sharing |
+| Model L pretrained checkpoint — `latest.pt` | https://drive.google.com/file/d/1xccvCBYuj0f5t0b7mv4asQONax4w9NEa/view?usp=drive_link |
 | Model H finetuned checkpoint | Phase 3 |
 | Model L finetuned checkpoint | Phase 3 |
 
@@ -245,6 +248,74 @@ the spec states in **tokens** — and which is measured in tokens here, during t
 encoding pass, not inferred from a character proxy.
 
 ---
+
+## Phase 2 results
+
+Full analysis: **[`report/phase2/phase2_report.md`](report/phase2/phase2_report.md)**.
+Machine-generated tables: [`report/phase2/stats/comparison.md`](report/phase2/stats/comparison.md).
+
+| | Model H — Telugu | Model L — Nepali |
+|---|---:|---:|
+| Parameters | 25,860,480 | 25,860,480 |
+| Training tokens consumed | 500,006,912 | 500,006,912 |
+| Wall clock (one Kaggle T4) | 4.50 h | 4.58 h |
+| Test cross-entropy (nats/token) | 4.09868 | 3.73057 |
+| Test perplexity | 60.26 | 41.70 |
+| **Test bits per byte** | **0.5770** | **0.4675** |
+| chrF++ (t = 1.0) | 17.03 | 19.41 |
+| BLEU-4 (t = 0.5) | 0.4133 | 4.1533 |
+
+Perplexity is per *token* and the two tokenizers differ (10.25 vs 11.51 UTF-8
+bytes per token), so bits-per-byte is the comparable figure. On it, the
+lower-resource model is 19% better — analysed in §5 of the Phase 2 report.
+
+Every checkpoint is resume-capable: model weights, optimizer state (both AdamW
+moments), GradScaler state, step, tokens seen, full config, and NumPy /
+CPU-torch / CUDA RNG state. Each file is ~310 MB — 25,860,480 parameters x 4
+bytes x 3. A `.pt` is itself a ZIP container; **do not extract it**,
+`torch.load` reads it directly.
+
+### Reproduction, continued from step 7
+
+### 8. Pretrain the two models
+
+About 4.5 h per model on one T4. Runs are independent and may be done in either
+order.
+
+```bash
+python -m common.train --config telugu/configs/model.yaml
+python -m common.train --config nepali/configs/model.yaml
+
+# resume after an interrupted session (bit-exact, not approximate)
+python -m common.train --config telugu/configs/model.yaml --resume
+```
+
+### 9. Evaluate
+
+Skip step 8 by downloading the checkpoints above into
+`checkpoints/telugu/best.pt` and `checkpoints/nepali/best.pt`.
+
+```bash
+pip install sacrebleu
+
+# PPL / BPB over the whole split, generation metrics, attention analysis
+python scripts/run_eval.py --runs telugu nepali --n-prompts 200
+
+# training curves from the committed logs — needs no GPU and no checkpoints
+python scripts/plot_training.py
+```
+
+Outputs land in `report/phase2/stats/` (JSON plus `comparison.md`) and
+`report/phase2/figures/` (PNG).
+
+### 10. Tests
+
+```bash
+python -m pytest tests/ -q     # 24 pass: 15 model, 9 training / checkpointing
+```
+
+Includes `test_causal_mask_blocks_the_future` (changing token t+1 leaves the
+logits at position t bit-identical) and `test_resume_is_bit_exact`.
 
 ---
 
