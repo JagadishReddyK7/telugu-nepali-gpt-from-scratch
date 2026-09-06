@@ -1,0 +1,16 @@
+{
+  "language": "telugu",
+  "checkpoint": "checkpoints/telugu/best.pt",
+  "checkpoint_step": 15259,
+  "checkpoint_tokens_seen": 500006912,
+  "split": "test",
+  "tokens_scored": 3899392,
+  "cross_entropy_nats": 4.098675,
+  "perplexity": 60.2604,
+  "bytes_per_token": 10.2489,
+  "bits_per_byte": 0.576953,
+  "vocab_size": 16000,
+  "positional": "learned",
+  "run": "telugu",
+  "eval_seconds": 39.9
+}
