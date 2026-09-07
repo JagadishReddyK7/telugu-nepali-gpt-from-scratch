@@ -176,13 +176,14 @@ def stage_attention(run: str, config: dict, ckpt: Path, device: str,
     """
     from common.attention import analyze
 
-    lang = config.get("language", run)
-    out = stats_dir / f"{lang}_attention.json"
+    # Keyed on the RUN, not the language: the ablation shares Telugu's
+    # language field, and keying on language would overwrite Model H's results.
+    out = stats_dir / f"{run}_attention.json"
     if out.exists() and not force:
         logger.info("[%s] attention  cached", run)
         return
     s = analyze(config, ckpt, device, stats_dir, fig_dir, split="test",
-                n_examples=3, positions=96, skip=16)
+                n_examples=3, positions=96, skip=16, name=run)
     logger.info("[%s] attention  head types %s", run, s["label_counts"])
 
 
@@ -273,8 +274,7 @@ def build_tables(runs: list[str], stats_dir: Path, out_path: Path) -> None:
           "backward offset in tokens. Both exclude the first 16 positions,",
           "which are degenerate by construction.", ""]
     for r in present:
-        cfg = yaml.safe_load(CONFIGS[r].read_text(encoding="utf-8"))
-        a = _load(stats_dir, f"{cfg.get('language', r)}_attention.json")
+        a = _load(stats_dir, f"{r}_attention.json")
         if not a:
             continue
         pl = a["per_layer"]

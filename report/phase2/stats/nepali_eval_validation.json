@@ -12,5 +12,5 @@
   "vocab_size": 16000,
   "positional": "learned",
   "run": "nepali",
-  "eval_seconds": 59.6
+  "eval_seconds": 48.3
 }

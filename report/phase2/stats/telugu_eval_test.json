@@ -12,5 +12,5 @@
   "vocab_size": 16000,
   "positional": "learned",
   "run": "telugu",
-  "eval_seconds": 39.9
+  "eval_seconds": 36.1
 }

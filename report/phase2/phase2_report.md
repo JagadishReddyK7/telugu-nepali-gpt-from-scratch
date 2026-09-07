@@ -21,6 +21,9 @@ single weight with the other.
 | Test cross-entropy (nats/token) | 4.09868 | 3.73057 |
 | Test perplexity | 60.26 | 41.70 |
 | **Test bits per byte** | **0.5770** | **0.4675** |
+
+A third, bonus run — Model H retrained with no positional embeddings —
+reaches 0.5827 bits per byte, only 0.99% worse than the baseline. See §6.
 | chrF++ (t = 1.0) | 17.03 | 19.41 |
 | BLEU-4 (t = 0.5) | 0.4133 | 4.1533 |
 
@@ -781,26 +784,119 @@ implementation is doing what a Transformer language model is supposed to do.
 
 ## 6. Bonus ablation — no positional embeddings
 
-*(To be completed. Config: `telugu/configs/model_nopos.yaml`, identical to
-Model H in every respect except `positional: none`, same seed, same data, same
-schedule.)*
+`telugu/configs/model_nopos.yaml` is identical to Model H in every respect
+except `positional: none`: same corpus, same tokenizer, same seed (1337), same
+schedule, same batch geometry, same 15,259 steps over the same 500,006,912
+tokens. Any difference is attributable to the positional embeddings and to
+nothing else.
 
-**Prediction, stated before the run.** Self-attention is permutation invariant,
-so removing positional embeddings looks like it should destroy the model. It
-should not, because **causal masking is itself a positional signal**: position
-$t$ can attend to exactly $t+1$ keys, so the count of visible keys encodes
-absolute position and a decoder-only Transformer can recover order from that
-alone (Haviv et al., 2022). The expected outcome is a degradation on the order
-of a few tenths of a nat — a result near $\ln(16000) = 9.68$ would indicate a
-broken run, not a finding.
+Removing the table drops $512 \times 384 = 196{,}608$ parameters, giving
+**25,663,872** against the baseline's 25,860,480 — a 0.76% reduction, confirmed
+by the checkpoint size falling from 310.5 MB to 308.14 MB, which is exactly
+$196{,}608 \times 3 \times 4$ bytes (weights plus both AdamW moments).
+
+### 6.1 The prediction, stated before the run
+
+Self-attention is permutation invariant, so removing positional embeddings
+looks as though it should destroy the model. It should not, because **causal
+masking is itself a positional signal**: query position $t$ attends to exactly
+$t + 1$ keys, so the *count of visible keys* encodes absolute position and a
+decoder-only Transformer can recover order from that alone (Haviv et al., 2022).
+
+The prediction was a degradation of a few tenths of a nat — with a result near
+$\ln(16000) = 9.68$ indicating a bug rather than a finding.
+
+### 6.2 Result
 
 | | Model H (learned) | Ablation (none) | Δ |
 |---|---:|---:|---:|
-| Test cross-entropy | 4.09868 | *pending* | |
-| Test perplexity | 60.26 | *pending* | |
-| Test BPB | 0.5770 | *pending* | |
+| Parameters | 25,860,480 | 25,663,872 | −196,608 (−0.76%) |
+| Validation cross-entropy | 4.06372 | 4.10476 | **+0.04104** |
+| Test cross-entropy | 4.09868 | 4.13979 | **+0.04111** |
+| Test perplexity | 60.26 | 62.79 | +4.2% |
+| **Test bits per byte** | **0.5770** | **0.5827** | **+0.99%** |
+| chrF++ (t = 1.0) | 17.0290 | 17.0246 | −0.03% |
+| BLEU-4 (greedy) | 0.3355 | 0.1951 | −41.8% |
+| repetition rate (greedy) | 0.6542 | 0.6058 | −7.4% |
 
----
+**The cost is 0.041 nats — roughly a fifth of the predicted lower bound, and
+under 1% in bits per byte.** Validation and test agree to four decimal places
+on the size of the gap, so this is not measurement noise.
+
+The prediction was directionally right and quantitatively too pessimistic.
+Causal masking does not merely leave the model *able* to recover position; at a
+512-token context it recovers nearly all of the value the embedding table
+provided. Haviv et al. is reproduced here on an independently built model.
+
+**chrF++ is unchanged to three decimal places** (17.0290 vs 17.0246) while
+BLEU-4 falls 42%. Character-level fluency is untouched; exact word-order
+matching degrades. That is the signature of slightly weaker local ordering
+rather than of broken language modelling — and it is the same word-versus-
+character split diagnosed in §4.3, appearing again for an unrelated reason.
+
+### 6.3 What actually changed inside the model
+
+The attention analysis is where the ablation earns its keep. Comparing the
+per-layer profiles (§4.7 for the baseline, `report/phase2/stats/telugu_nopos_attention.json`
+and `figures/telugu_nopos_attention_profile.png` for the ablation):
+
+| | Model H (learned) | Ablation (none) |
+|---|---|---|
+| diffuse stage | layers 0–2 | layers 0–**3** |
+| local stage (distance minimum) | layer 4, **6.20** tokens | layer **6**, **7.26** tokens |
+| previous-token peak | layer 5, 0.275 | layer **6**, **0.300** |
+| entropy first below 0.60 | layer 3 (0.573) | layer **6** (0.482) |
+| long-range stage | layers 6–10 | layers 8–10 |
+| head types | 29 local, 20 diffuse, 17 content | 26 local, 26 diffuse, 14 content |
+| peak sink mass | 0.164 (layer 8) | 0.075 (layer 8) |
+
+**The three-stage organization survives intact but shifts two to three layers
+deeper.** The ablated model keeps normalized entropy above 0.78 through layer 3,
+where the baseline has already dropped to 0.573, and its local heads do not
+appear until layer 6.
+
+The natural reading: with no positional embedding at the input, the model must
+first *construct* positional information from the causal mask before it can
+build heads that use it. That construction consumes roughly two layers of
+depth. The 0.041-nat penalty is then not really the cost of losing position —
+it is the cost of spending two of eleven layers re-deriving it.
+
+Two smaller observations point the same way. Previous-token mass peaks *higher*
+in the ablation (0.300 vs 0.275): once position has been reconstructed, the
+model leans on it harder. And peak sink mass more than halves (0.075 vs 0.164),
+so fewer heads are idling — consistent with a model under more pressure to use
+its capacity.
+
+### 6.4 The efficiency side of the trade
+
+Removing the table also removes an embedding lookup and an add per token, plus
+196,608 parameters from every AdamW update.
+
+| | Model H (learned) | Ablation (none) | Δ |
+|---|---:|---:|---:|
+| Mean throughput | 31,130 tok/s | 33,720 tok/s | **+8.3%** |
+| Wall clock | 4.50 h | 4.15 h | −7.8% |
+
+(Both figures are run means from `report/phase2/stats/run_summary.md`.
+Instantaneous throughput early in the ablation reached ~36,000 tok/s, but
+early-run readings are optimistic — the GPU is cold, no evaluation or
+checkpoint write has yet interrupted the loop — and quoting them would overstate
+the gain by roughly a factor of two.)
+
+Stated as a trade: learned absolute positional embeddings cost 0.76% of
+parameters and 8.3% of throughput to buy 0.041 nats, about 1% of bits per byte.
+At this scale and context length that is close to break-even, and which side it
+falls on depends on what is scarce. It would become clearly worth paying at
+longer contexts, where the count-of-visible-keys signal is a weaker proxy for
+absolute position, and clearly not worth paying if throughput were the binding
+constraint.
+
+**A caveat this experiment cannot escape.** This is one seed, one language, one
+context length. A single ablation pair cannot separate a genuine architectural
+effect from seed variance, and 0.041 nats is small enough that seed variance is
+a live concern — the honest way to settle it would be two or three seeds per
+arm, which the compute budget did not allow. The finding is reported with that
+limitation attached rather than presented as settled.
 
 ## 7. Reproduction
 

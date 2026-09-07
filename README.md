@@ -37,6 +37,8 @@ vocabulary entry, or weight crosses between them.
 | Model H pretrained checkpoint — `latest.pt` | https://drive.google.com/file/d/1-YkgfnZGoUuEchN55d2ek79AjtzOxApu/view?usp=drive_link |
 | Model L pretrained checkpoint — `best.pt` | https://drive.google.com/file/d/1NRc9J41AFgg_toV7Kzd_16gfESv7aLM5/view?usp=sharing |
 | Model L pretrained checkpoint — `latest.pt` | https://drive.google.com/file/d/1xccvCBYuj0f5t0b7mv4asQONax4w9NEa/view?usp=drive_link |
+| Ablation (no positional emb.) — `best.pt` | https://drive.google.com/file/d/1CtL5VKZj1wZd3r8STwqK0hv7H0mOywLo/view?usp=drive_link |
+| Ablation (no positional emb.) — `latest.pt` | https://drive.google.com/file/d/14vhOJ-xgheIxp0vt-cYKfLTim9Un0esG/view?usp=drive_link |
 | Model H finetuned checkpoint | Phase 3 |
 | Model L finetuned checkpoint | Phase 3 |
 
@@ -254,25 +256,35 @@ encoding pass, not inferred from a character proxy.
 Full analysis: **[`report/phase2/phase2_report.md`](report/phase2/phase2_report.md)**.
 Machine-generated tables: [`report/phase2/stats/comparison.md`](report/phase2/stats/comparison.md).
 
-| | Model H — Telugu | Model L — Nepali |
-|---|---:|---:|
-| Parameters | 25,860,480 | 25,860,480 |
-| Training tokens consumed | 500,006,912 | 500,006,912 |
-| Wall clock (one Kaggle T4) | 4.50 h | 4.58 h |
-| Test cross-entropy (nats/token) | 4.09868 | 3.73057 |
-| Test perplexity | 60.26 | 41.70 |
-| **Test bits per byte** | **0.5770** | **0.4675** |
-| chrF++ (t = 1.0) | 17.03 | 19.41 |
-| BLEU-4 (t = 0.5) | 0.4133 | 4.1533 |
+| | Model H — Telugu | Model L — Nepali | Ablation — no pos. emb. |
+|---|---:|---:|---:|
+| Parameters | 25,860,480 | 25,860,480 | 25,663,872 |
+| Training tokens consumed | 500,006,912 | 500,006,912 | 500,006,912 |
+| Wall clock (one Kaggle T4) | 4.50 h | 4.58 h | 4.15 h |
+| Mean throughput | 31,130 tok/s | 30,558 tok/s | 33,720 tok/s |
+| Test cross-entropy (nats/token) | 4.09868 | 3.73057 | 4.13979 |
+| Test perplexity | 60.26 | 41.70 | 62.79 |
+| **Test bits per byte** | **0.5770** | **0.4675** | **0.5827** |
+| chrF++ (t = 1.0) | 17.03 | 19.41 | 17.02 |
+| BLEU-4 (t = 0.5) | 0.4133 | 4.1533 | 0.2109 |
 
 Perplexity is per *token* and the two tokenizers differ (10.25 vs 11.51 UTF-8
 bytes per token), so bits-per-byte is the comparable figure. On it, the
 lower-resource model is 19% better — analysed in §5 of the Phase 2 report.
 
+The bonus ablation retrains Model H with `positional: none`. Removing the
+learned positional table costs only **0.041 nats** (0.99% of bits per byte)
+while running 8.3% faster, because causal masking is itself a positional
+signal — position *t* attends to exactly *t*+1 keys. The attention analysis
+shows the model's three-stage layer organization surviving intact but shifting
+two to three layers deeper, which is where the small penalty comes from. See §6.
+
+
 Every checkpoint is resume-capable: model weights, optimizer state (both AdamW
 moments), GradScaler state, step, tokens seen, full config, and NumPy /
 CPU-torch / CUDA RNG state. Each file is ~310 MB — 25,860,480 parameters x 4
-bytes x 3. A `.pt` is itself a ZIP container; **do not extract it**,
+bytes x 3 (weights plus both AdamW moments); the ablation's are 308 MB,
+the 196,608-parameter positional table being absent. A `.pt` is itself a ZIP container; **do not extract it**,
 `torch.load` reads it directly.
 
 ### Reproduction, continued from step 7
@@ -316,6 +328,17 @@ python -m pytest tests/ -q     # 24 pass: 15 model, 9 training / checkpointing
 
 Includes `test_causal_mask_blocks_the_future` (changing token t+1 leaves the
 logits at position t bit-identical) and `test_resume_is_bit_exact`.
+
+### 11. Ablation (bonus)
+
+Retrains Model H with the positional embedding table removed. Same corpus,
+tokenizer, seed and schedule — only `positional: none` differs, so any
+difference is attributable to the embeddings alone.
+
+```bash
+python -m common.train --config telugu/configs/model_nopos.yaml
+python scripts/run_eval.py --runs telugu_nopos --n-prompts 200
+```
 
 ---
 

@@ -501,8 +501,8 @@ def write_token_table(token_ids: np.ndarray, sp, out_path: Path,
 
 def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
             fig_dir: Path, split: str = "test", n_examples: int = 3,
-            positions: int = 96, skip: int = 16, seed: int | None = None
-            ) -> dict:
+            positions: int = 96, skip: int = 16, seed: int | None = None,
+            name: str | None = None) -> dict:
     """Run the whole attention analysis for one checkpoint.
 
     Statistics are averaged over ``n_examples`` independent held-out passages
@@ -519,6 +519,12 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
         positions: Sequence length to analyze and plot.
         skip: Leading query positions excluded from averages.
         seed: Passage-selection seed; defaults to the config's train seed.
+        name: Stem for every output file. Defaults to the config's ``language``,
+            but MUST be set to the run name whenever two runs share a language.
+            The no-positional-embedding ablation declares ``language: telugu``
+            by design -- it is the same corpus and tokenizer, which is what
+            makes it a controlled comparison -- so without this it would
+            silently overwrite Model H's attention results and figures.
 
     Returns:
         The JSON-serializable summary that was written to disk.
@@ -526,6 +532,7 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
     import sentencepiece as spm
 
     language = config.get("language", "model")
+    stem = name or language
     out_dir.mkdir(parents=True, exist_ok=True)
     fig_dir.mkdir(parents=True, exist_ok=True)
 
@@ -556,8 +563,8 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
         if k == 0:
             first_attn = attn
             sentence = write_token_table(
-                ids, sp, out_dir / f"{language}_attention_tokens.md",
-                language, positions)
+                ids, sp, out_dir / f"{stem}_attention_tokens.md",
+                stem, positions)
 
     # Average each statistic across the example passages.
     L, H = per_example[0]["n_layer"], per_example[0]["n_head"]
@@ -566,6 +573,7 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
                             axis=0) for k in keys}
 
     summary = {
+        "run": stem,
         "language": language,
         "checkpoint": str(ckpt_path),
         "checkpoint_step": ck.get("step"),
@@ -590,22 +598,22 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
     mid = L // 2
     heads = list(range(min(H, 6)))
     plot_head_heatmaps(first_attn, [early, mid, late], heads,
-                       fig_dir / f"{language}_attention_heatmaps.png",
-                       language, positions)
+                       fig_dir / f"{stem}_attention_heatmaps.png",
+                       stem, positions)
     plot_layer_head_matrix(
         mean_head["entropy_normalized"],
-        fig_dir / f"{language}_attention_entropy.png",
-        f"Normalized attention entropy per head — {language}",
+        fig_dir / f"{stem}_attention_entropy.png",
+        f"Normalized attention entropy per head — {stem}",
         "$H_i / \\ln(i{+}1)$   (1 = uniform, 0 = peaked)", cmap="magma")
     plot_layer_head_matrix(
         mean_head["distance_tokens"],
-        fig_dir / f"{language}_attention_distance.png",
-        f"Mean attention distance per head — {language}",
+        fig_dir / f"{stem}_attention_distance.png",
+        f"Mean attention distance per head — {stem}",
         "expected backward offset (tokens)", cmap="viridis")
-    plot_layer_profiles(summary, fig_dir / f"{language}_attention_profile.png",
-                        language)
+    plot_layer_profiles(summary, fig_dir / f"{stem}_attention_profile.png",
+                        stem)
 
-    out_json = out_dir / f"{language}_attention.json"
+    out_json = out_dir / f"{stem}_attention.json"
     out_json.write_text(json.dumps(summary, indent=2, ensure_ascii=False),
                         encoding="utf-8")
     logger.info("  wrote %s", out_json)
@@ -627,6 +635,9 @@ def main() -> None:
                    help="Leading query positions excluded from averages.")
     p.add_argument("--stats-dir", type=Path, default=Path("report/phase2/stats"))
     p.add_argument("--fig-dir", type=Path, default=Path("report/phase2/figures"))
+    p.add_argument("--name", default=None,
+                   help="Output filename stem; defaults to the config language. "
+                        "Set it when two runs share a language (the ablation).")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -640,7 +651,8 @@ def main() -> None:
                 config.get("language"), ckpt.name, args.n_examples,
                 args.positions)
     s = analyze(config, ckpt, device, args.stats_dir, args.fig_dir,
-                args.split, args.n_examples, args.positions, args.skip)
+                args.split, args.n_examples, args.positions, args.skip,
+                name=args.name)
 
     print(f"\n  head types: {s['label_counts']}")
     print(f"  {'layer':>5}  {'entropy':>8}  {'dist(tok)':>10}  "
