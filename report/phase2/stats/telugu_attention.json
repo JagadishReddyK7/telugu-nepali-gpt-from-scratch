@@ -12,272 +12,272 @@
   "per_head": {
     "entropy_normalized": [
       [
-        0.85175,
+        0.85176,
         0.96303,
         0.97271,
         0.92277,
-        0.93434,
+        0.93433,
         0.96269
       ],
       [
         0.92251,
-        0.96258,
+        0.96257,
         0.95378,
         0.88852,
-        0.92058,
+        0.92059,
         0.94458
       ],
       [
-        0.91881,
-        0.93775,
+        0.9188,
+        0.93776,
         0.88421,
         0.6586,
         0.92204,
         0.65094
       ],
       [
-        0.55192,
-        0.54674,
-        0.78858,
-        0.41172,
-        0.75867,
+        0.55189,
+        0.54672,
+        0.78856,
+        0.41167,
+        0.75868,
         0.37921
       ],
       [
-        0.25438,
-        0.60713,
-        0.57128,
-        0.50859,
-        0.81413,
-        0.56328
+        0.25437,
+        0.6071,
+        0.57125,
+        0.50857,
+        0.81412,
+        0.56324
       ],
       [
         0.02192,
-        0.74755,
-        0.74929,
+        0.74753,
+        0.74931,
         0.34807,
-        0.57017,
-        0.59694
+        0.57019,
+        0.59691
       ],
       [
-        0.43692,
-        0.56063,
-        0.39786,
-        0.67802,
+        0.43695,
+        0.56062,
+        0.39782,
+        0.67801,
         0.47282,
-        0.36574
+        0.36573
       ],
       [
-        0.67614,
-        0.56345,
+        0.67612,
+        0.56343,
         0.54195,
-        0.62796,
-        0.61816,
-        0.54961
+        0.62794,
+        0.61815,
+        0.54956
       ],
       [
-        0.43246,
-        0.60721,
-        0.53914,
-        0.38973,
-        0.67226,
-        0.60702
+        0.43248,
+        0.60723,
+        0.53912,
+        0.38972,
+        0.67228,
+        0.60703
       ],
       [
-        0.64572,
-        0.64753,
-        0.6477,
+        0.64574,
+        0.6475,
+        0.64767,
         0.64853,
-        0.72901,
-        0.82463
+        0.72904,
+        0.82462
       ],
       [
-        0.51212,
-        0.61723,
+        0.51215,
+        0.61726,
         0.58619,
         0.72944,
-        0.56735,
-        0.50041
+        0.56737,
+        0.50037
       ]
     ],
     "entropy_nats": [
       [
-        3.35908,
-        3.78533,
-        3.82862,
+        3.3591,
+        3.78534,
+        3.82863,
         3.63315,
-        3.67605,
+        3.67603,
         3.78605
       ],
       [
-        3.63767,
-        3.80579,
-        3.75311,
-        3.50306,
-        3.61109,
-        3.72391
+        3.63765,
+        3.80575,
+        3.75312,
+        3.50305,
+        3.61113,
+        3.7239
       ],
       [
-        3.61319,
-        3.67101,
-        3.47188,
+        3.61316,
+        3.67105,
+        3.47187,
         2.55516,
-        3.63609,
-        2.56989
+        3.63612,
+        2.56994
       ],
       [
-        2.1276,
-        2.11169,
-        3.07569,
-        1.57678,
-        2.95935,
-        1.45711
+        2.12749,
+        2.11161,
+        3.07564,
+        1.57662,
+        2.95938,
+        1.45707
       ],
       [
-        0.97482,
-        2.35194,
-        2.20868,
-        1.96925,
-        3.18884,
-        2.17122
+        0.97478,
+        2.35181,
+        2.20858,
+        1.96916,
+        3.18877,
+        2.17108
       ],
       [
-        0.08454,
-        2.92813,
-        2.96236,
-        1.35,
-        2.20841,
-        2.31506
+        0.08456,
+        2.92805,
+        2.9624,
+        1.34998,
+        2.20849,
+        2.31495
       ],
       [
-        1.68135,
-        2.17564,
-        1.57969,
-        2.65699,
-        1.82883,
-        1.45317
+        1.68146,
+        2.1756,
+        1.57957,
+        2.65693,
+        1.82881,
+        1.45313
       ],
       [
-        2.6318,
-        2.20017,
-        2.13304,
-        2.44639,
-        2.41197,
-        2.15787
+        2.63173,
+        2.2001,
+        2.13307,
+        2.4463,
+        2.41189,
+        2.15769
       ],
       [
-        1.66779,
-        2.37881,
-        2.12107,
-        1.55766,
-        2.66695,
-        2.36106
+        1.66786,
+        2.3789,
+        2.12103,
+        1.5576,
+        2.66705,
+        2.3611
       ],
       [
-        2.51654,
-        2.5313,
-        2.53343,
-        2.54369,
-        2.86161,
-        3.24798
+        2.51661,
+        2.53118,
+        2.5333,
+        2.5437,
+        2.86171,
+        3.24794
       ],
       [
-        2.01101,
-        2.39905,
+        2.01115,
+        2.39916,
         2.2835,
-        2.85032,
-        2.216,
-        1.95274
+        2.85033,
+        2.21609,
+        1.95264
       ]
     ],
     "distance_tokens": [
       [
-        20.55482,
-        29.15812,
-        24.91177,
-        24.33815,
-        23.16737,
-        25.90224
+        20.5551,
+        29.15793,
+        24.91174,
+        24.33789,
+        23.16724,
+        25.90213
       ],
       [
-        28.88556,
-        28.1842,
-        31.64959,
-        31.11513,
-        20.7753,
-        28.36234
+        28.88586,
+        28.18447,
+        31.64976,
+        31.11449,
+        20.77511,
+        28.3622
       ],
       [
-        22.23853,
-        35.29613,
-        17.62315,
-        7.78783,
-        26.52354,
-        29.82281
+        22.23775,
+        35.29421,
+        17.6217,
+        7.7857,
+        26.51798,
+        29.81391
       ],
       [
-        3.12091,
-        4.44568,
-        13.74696,
-        3.3753,
-        13.34194,
-        1.94863
+        3.1206,
+        4.44558,
+        13.74713,
+        3.37434,
+        13.3417,
+        1.94854
       ],
       [
-        1.77305,
-        6.86397,
-        3.73541,
-        4.04433,
-        16.0632,
-        4.71279
+        1.77285,
+        6.86368,
+        3.73507,
+        4.04434,
+        16.06355,
+        4.71283
       ],
       [
-        1.09016,
-        18.34439,
-        24.16369,
-        2.71353,
-        6.60999,
-        8.69966
+        1.09006,
+        18.3447,
+        24.16229,
+        2.71317,
+        6.60954,
+        8.70014
       ],
       [
-        4.84806,
-        11.78869,
-        30.1955,
-        18.16015,
-        6.77959,
-        29.64978
+        4.84777,
+        11.78962,
+        30.19014,
+        18.16097,
+        6.78007,
+        29.64576
       ],
       [
-        10.52756,
-        12.69298,
-        20.25567,
-        12.44989,
-        11.05896,
-        23.90269
+        10.52804,
+        12.69355,
+        20.25572,
+        12.44887,
+        11.0576,
+        23.90357
       ],
       [
-        6.03759,
-        24.12033,
-        28.09099,
-        30.80103,
-        27.54508,
-        16.85939
+        6.03786,
+        24.11781,
+        28.09035,
+        30.80381,
+        27.54486,
+        16.85924
       ],
       [
-        16.49791,
-        21.65315,
-        17.40051,
-        20.17474,
-        22.03874,
-        24.85401
+        16.49766,
+        21.65136,
+        17.3993,
+        20.1719,
+        22.03721,
+        24.8534
       ],
       [
-        25.89801,
-        20.46865,
-        22.36103,
+        25.89657,
+        20.46835,
+        22.36078,
         18.20195,
-        15.46342,
-        23.92247
+        15.46363,
+        23.92463
       ]
     ],
     "distance_relative": [
@@ -285,89 +285,89 @@
         0.38035,
         0.52412,
         0.44644,
-        0.44496,
+        0.44495,
         0.42431,
         0.48061
       ],
       [
-        0.53213,
-        0.51728,
-        0.5627,
-        0.55915,
+        0.53214,
+        0.51729,
+        0.56269,
+        0.55913,
         0.39016,
         0.52291
       ],
       [
-        0.41865,
-        0.58999,
-        0.3481,
-        0.15662,
-        0.48651,
-        0.57197
+        0.41864,
+        0.58997,
+        0.34808,
+        0.15659,
+        0.48641,
+        0.57186
       ],
       [
-        0.0742,
-        0.10193,
-        0.29466,
-        0.08116,
-        0.27217,
+        0.07419,
+        0.10192,
+        0.29467,
+        0.08114,
+        0.27215,
         0.04614
       ],
       [
-        0.04184,
+        0.04183,
         0.16217,
-        0.08592,
-        0.09406,
-        0.33186,
+        0.08591,
+        0.09407,
+        0.33187,
         0.10951
       ],
       [
         0.02455,
-        0.37669,
-        0.45607,
+        0.37668,
+        0.45605,
         0.061,
         0.15151,
-        0.19571
+        0.19573
       ],
       [
         0.11365,
-        0.26352,
-        0.58289,
-        0.36786,
-        0.15511,
-        0.5751
+        0.26356,
+        0.58281,
+        0.36787,
+        0.15514,
+        0.57503
       ],
       [
-        0.22711,
-        0.28171,
-        0.41515,
-        0.26683,
-        0.23834,
-        0.47982
+        0.22713,
+        0.28173,
+        0.41516,
+        0.26682,
+        0.23832,
+        0.47985
       ],
       [
-        0.13227,
-        0.46875,
-        0.54744,
-        0.58693,
+        0.13228,
+        0.4687,
+        0.54743,
+        0.58699,
         0.531,
-        0.34135
+        0.34137
       ],
       [
-        0.3302,
-        0.43267,
-        0.35178,
-        0.40677,
-        0.43213,
+        0.33019,
+        0.43262,
+        0.35176,
+        0.40671,
+        0.4321,
         0.46391
       ],
       [
-        0.50913,
+        0.50912,
         0.3993,
-        0.43073,
+        0.43074,
         0.35431,
-        0.32101,
-        0.48244
+        0.32102,
+        0.4825
       ]
     ],
     "sink_mass_pos0": [
@@ -376,88 +376,88 @@
         0.04614,
         0.03269,
         0.03386,
-        0.02305,
-        0.03513
+        0.02306,
+        0.03514
       ],
       [
-        0.09721,
-        0.07686,
-        0.09267,
+        0.09724,
+        0.07687,
+        0.09266,
         0.15044,
         0.05946,
         0.09451
       ],
       [
-        0.03748,
-        0.07028,
-        0.08116,
-        0.0623,
-        0.11439,
-        0.42576
+        0.03747,
+        0.07029,
+        0.08115,
+        0.06226,
+        0.11435,
+        0.42568
       ],
       [
         0.00493,
-        0.00746,
-        0.06687,
-        0.0135,
-        0.11916,
+        0.00745,
+        0.06688,
+        0.01348,
+        0.11913,
         0.00068
       ],
       [
         0.00315,
-        0.02506,
+        0.02505,
         0.00461,
         0.01063,
-        0.09426,
+        0.09428,
         0.00674
       ],
       [
         0.00018,
-        0.0973,
-        0.11595,
+        0.09729,
+        0.11593,
         0.00196,
-        0.0159,
-        0.05317
+        0.01591,
+        0.05321
       ],
       [
         0.00566,
-        0.08434,
-        0.29609,
-        0.09176,
-        0.03745,
-        0.28216
+        0.08439,
+        0.29598,
+        0.09178,
+        0.03748,
+        0.28206
       ],
       [
-        0.0455,
-        0.07656,
-        0.1263,
-        0.06364,
-        0.03604,
-        0.2191
+        0.04552,
+        0.07658,
+        0.12633,
+        0.06365,
+        0.03605,
+        0.21919
       ],
       [
         0.0161,
-        0.18037,
-        0.21487,
-        0.2568,
-        0.20213,
-        0.11247
+        0.18029,
+        0.21489,
+        0.25691,
+        0.20214,
+        0.11248
       ],
       [
-        0.06414,
-        0.12732,
-        0.08057,
-        0.13602,
-        0.0757,
+        0.06412,
+        0.12726,
+        0.08058,
+        0.13598,
+        0.07566,
         0.09059
       ],
       [
-        0.14247,
-        0.08186,
-        0.12829,
+        0.14242,
+        0.08184,
+        0.1283,
         0.03176,
-        0.0693,
-        0.16693
+        0.06931,
+        0.16699
       ]
     ],
     "previous_token_mass": [
@@ -482,72 +482,72 @@
         0.02846,
         0.07123,
         0.18173,
-        0.03741,
-        0.05772
+        0.03742,
+        0.05774
       ],
       [
-        0.2233,
-        0.16858,
-        0.06434,
-        0.34102,
+        0.22331,
+        0.1686,
+        0.06435,
+        0.34103,
         0.09272,
-        0.36399
+        0.36395
       ],
       [
         0.61897,
-        0.11389,
-        0.21742,
-        0.2522,
+        0.11388,
+        0.21743,
+        0.25221,
         0.05585,
         0.17651
       ],
       [
-        0.96547,
+        0.96546,
         0.04392,
         0.04098,
-        0.33153,
-        0.10869,
-        0.16095
+        0.33154,
+        0.1087,
+        0.16096
       ],
       [
-        0.21947,
-        0.08287,
-        0.01892,
-        0.04564,
-        0.23347,
+        0.21948,
+        0.08288,
+        0.01893,
+        0.04565,
+        0.23348,
         0.01926
       ],
       [
         0.23759,
-        0.07683,
+        0.07682,
         0.03574,
-        0.09782,
-        0.09186,
+        0.09783,
+        0.09187,
         0.03685
       ],
       [
-        0.26245,
+        0.26244,
         0.02671,
-        0.02624,
+        0.02625,
         0.01694,
         0.02201,
         0.06153
       ],
       [
         0.0638,
-        0.03072,
-        0.04899,
-        0.04394,
-        0.03202,
-        0.04454
+        0.03073,
+        0.04898,
+        0.04395,
+        0.03203,
+        0.04455
       ],
       [
         0.02284,
         0.03747,
-        0.04124,
+        0.04125,
         0.04944,
         0.05823,
-        0.02954
+        0.02953
       ]
     ]
   },
@@ -555,67 +555,67 @@
     "entropy_normalized": [
       0.93455,
       0.93209,
-      0.82872,
-      0.57281,
-      0.55313,
+      0.82873,
+      0.57279,
+      0.55311,
       0.50566,
       0.48533,
-      0.59621,
-      0.5413,
+      0.59619,
+      0.54131,
       0.69052,
-      0.58546
+      0.58547
     ],
     "entropy_nats": [
       3.67805,
-      3.67244,
-      3.25287,
-      2.21804,
-      2.14413,
-      1.97475,
-      1.89594,
-      2.33021,
-      2.12556,
-      2.70576,
-      2.28544
+      3.67243,
+      3.25288,
+      2.21797,
+      2.14403,
+      1.97474,
+      1.89592,
+      2.33013,
+      2.12559,
+      2.70574,
+      2.28548
     ],
     "distance_tokens": [
-      24.67208,
-      28.16202,
-      23.21533,
-      6.66324,
-      6.19879,
-      10.27024,
-      16.90363,
-      15.14796,
-      22.2424,
-      20.43651,
-      21.05259
+      24.67201,
+      28.16198,
+      23.21188,
+      6.66298,
+      6.19872,
+      10.26998,
+      16.90239,
+      15.14789,
+      22.24232,
+      20.43514,
+      21.05265
     ],
     "distance_relative": [
       0.45013,
       0.51406,
-      0.42864,
-      0.14504,
+      0.42859,
+      0.14503,
       0.13756,
       0.21092,
-      0.34302,
-      0.31816,
-      0.43462,
-      0.40291,
-      0.41615
+      0.34301,
+      0.31817,
+      0.43463,
+      0.40288,
+      0.41616
     ],
     "sink_mass_pos0": [
       0.03272,
-      0.09519,
-      0.1319,
+      0.0952,
+      0.13187,
       0.03543,
       0.02408,
       0.04741,
-      0.13291,
-      0.09452,
-      0.16379,
-      0.09572,
-      0.10343
+      0.13289,
+      0.09455,
+      0.1638,
+      0.0957,
+      0.10344
     ],
     "previous_token_mass": [
       0.03011,
@@ -624,8 +624,8 @@
       0.20899,
       0.23914,
       0.27526,
-      0.10327,
-      0.09611,
+      0.10328,
+      0.09612,
       0.06931,
       0.044,
       0.03979
@@ -636,9 +636,9 @@
       "layer": 0,
       "head": 0,
       "label": "diffuse",
-      "entropy_normalized": 0.85175,
+      "entropy_normalized": 0.85176,
       "distance_relative": 0.38035,
-      "distance_tokens": 20.55482,
+      "distance_tokens": 20.5551,
       "sink_mass_pos0": 0.02543,
       "previous_token_mass": 0.04202
     },
@@ -648,7 +648,7 @@
       "label": "diffuse",
       "entropy_normalized": 0.96303,
       "distance_relative": 0.52412,
-      "distance_tokens": 29.15812,
+      "distance_tokens": 29.15793,
       "sink_mass_pos0": 0.04614,
       "previous_token_mass": 0.02266
     },
@@ -658,7 +658,7 @@
       "label": "diffuse",
       "entropy_normalized": 0.97271,
       "distance_relative": 0.44644,
-      "distance_tokens": 24.91177,
+      "distance_tokens": 24.91174,
       "sink_mass_pos0": 0.03269,
       "previous_token_mass": 0.03472
     },
@@ -667,8 +667,8 @@
       "head": 3,
       "label": "diffuse",
       "entropy_normalized": 0.92277,
-      "distance_relative": 0.44496,
-      "distance_tokens": 24.33815,
+      "distance_relative": 0.44495,
+      "distance_tokens": 24.33789,
       "sink_mass_pos0": 0.03386,
       "previous_token_mass": 0.02669
     },
@@ -676,10 +676,10 @@
       "layer": 0,
       "head": 4,
       "label": "diffuse",
-      "entropy_normalized": 0.93434,
+      "entropy_normalized": 0.93433,
       "distance_relative": 0.42431,
-      "distance_tokens": 23.16737,
-      "sink_mass_pos0": 0.02305,
+      "distance_tokens": 23.16724,
+      "sink_mass_pos0": 0.02306,
       "previous_token_mass": 0.03005
     },
     {
@@ -688,8 +688,8 @@
       "label": "diffuse",
       "entropy_normalized": 0.96269,
       "distance_relative": 0.48061,
-      "distance_tokens": 25.90224,
-      "sink_mass_pos0": 0.03513,
+      "distance_tokens": 25.90213,
+      "sink_mass_pos0": 0.03514,
       "previous_token_mass": 0.02455
     },
     {
@@ -697,19 +697,19 @@
       "head": 0,
       "label": "diffuse",
       "entropy_normalized": 0.92251,
-      "distance_relative": 0.53213,
-      "distance_tokens": 28.88556,
-      "sink_mass_pos0": 0.09721,
+      "distance_relative": 0.53214,
+      "distance_tokens": 28.88586,
+      "sink_mass_pos0": 0.09724,
       "previous_token_mass": 0.02627
     },
     {
       "layer": 1,
       "head": 1,
       "label": "diffuse",
-      "entropy_normalized": 0.96258,
-      "distance_relative": 0.51728,
-      "distance_tokens": 28.1842,
-      "sink_mass_pos0": 0.07686,
+      "entropy_normalized": 0.96257,
+      "distance_relative": 0.51729,
+      "distance_tokens": 28.18447,
+      "sink_mass_pos0": 0.07687,
       "previous_token_mass": 0.02435
     },
     {
@@ -717,9 +717,9 @@
       "head": 2,
       "label": "diffuse",
       "entropy_normalized": 0.95378,
-      "distance_relative": 0.5627,
-      "distance_tokens": 31.64959,
-      "sink_mass_pos0": 0.09267,
+      "distance_relative": 0.56269,
+      "distance_tokens": 31.64976,
+      "sink_mass_pos0": 0.09266,
       "previous_token_mass": 0.02499
     },
     {
@@ -727,8 +727,8 @@
       "head": 3,
       "label": "diffuse",
       "entropy_normalized": 0.88852,
-      "distance_relative": 0.55915,
-      "distance_tokens": 31.11513,
+      "distance_relative": 0.55913,
+      "distance_tokens": 31.11449,
       "sink_mass_pos0": 0.15044,
       "previous_token_mass": 0.02484
     },
@@ -736,9 +736,9 @@
       "layer": 1,
       "head": 4,
       "label": "diffuse",
-      "entropy_normalized": 0.92058,
+      "entropy_normalized": 0.92059,
       "distance_relative": 0.39016,
-      "distance_tokens": 20.7753,
+      "distance_tokens": 20.77511,
       "sink_mass_pos0": 0.05946,
       "previous_token_mass": 0.04165
     },
@@ -748,7 +748,7 @@
       "label": "diffuse",
       "entropy_normalized": 0.94458,
       "distance_relative": 0.52291,
-      "distance_tokens": 28.36234,
+      "distance_tokens": 28.3622,
       "sink_mass_pos0": 0.09451,
       "previous_token_mass": 0.02518
     },
@@ -756,20 +756,20 @@
       "layer": 2,
       "head": 0,
       "label": "diffuse",
-      "entropy_normalized": 0.91881,
-      "distance_relative": 0.41865,
-      "distance_tokens": 22.23853,
-      "sink_mass_pos0": 0.03748,
+      "entropy_normalized": 0.9188,
+      "distance_relative": 0.41864,
+      "distance_tokens": 22.23775,
+      "sink_mass_pos0": 0.03747,
       "previous_token_mass": 0.03083
     },
     {
       "layer": 2,
       "head": 1,
       "label": "diffuse",
-      "entropy_normalized": 0.93775,
-      "distance_relative": 0.58999,
-      "distance_tokens": 35.29613,
-      "sink_mass_pos0": 0.07028,
+      "entropy_normalized": 0.93776,
+      "distance_relative": 0.58997,
+      "distance_tokens": 35.29421,
+      "sink_mass_pos0": 0.07029,
       "previous_token_mass": 0.02846
     },
     {
@@ -777,9 +777,9 @@
       "head": 2,
       "label": "local",
       "entropy_normalized": 0.88421,
-      "distance_relative": 0.3481,
-      "distance_tokens": 17.62315,
-      "sink_mass_pos0": 0.08116,
+      "distance_relative": 0.34808,
+      "distance_tokens": 17.6217,
+      "sink_mass_pos0": 0.08115,
       "previous_token_mass": 0.07123
     },
     {
@@ -787,9 +787,9 @@
       "head": 3,
       "label": "local",
       "entropy_normalized": 0.6586,
-      "distance_relative": 0.15662,
-      "distance_tokens": 7.78783,
-      "sink_mass_pos0": 0.0623,
+      "distance_relative": 0.15659,
+      "distance_tokens": 7.7857,
+      "sink_mass_pos0": 0.06226,
       "previous_token_mass": 0.18173
     },
     {
@@ -797,69 +797,69 @@
       "head": 4,
       "label": "diffuse",
       "entropy_normalized": 0.92204,
-      "distance_relative": 0.48651,
-      "distance_tokens": 26.52354,
-      "sink_mass_pos0": 0.11439,
-      "previous_token_mass": 0.03741
+      "distance_relative": 0.48641,
+      "distance_tokens": 26.51798,
+      "sink_mass_pos0": 0.11435,
+      "previous_token_mass": 0.03742
     },
     {
       "layer": 2,
       "head": 5,
       "label": "content",
       "entropy_normalized": 0.65094,
-      "distance_relative": 0.57197,
-      "distance_tokens": 29.82281,
-      "sink_mass_pos0": 0.42576,
-      "previous_token_mass": 0.05772
+      "distance_relative": 0.57186,
+      "distance_tokens": 29.81391,
+      "sink_mass_pos0": 0.42568,
+      "previous_token_mass": 0.05774
     },
     {
       "layer": 3,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.55192,
-      "distance_relative": 0.0742,
-      "distance_tokens": 3.12091,
+      "entropy_normalized": 0.55189,
+      "distance_relative": 0.07419,
+      "distance_tokens": 3.1206,
       "sink_mass_pos0": 0.00493,
-      "previous_token_mass": 0.2233
+      "previous_token_mass": 0.22331
     },
     {
       "layer": 3,
       "head": 1,
       "label": "local",
-      "entropy_normalized": 0.54674,
-      "distance_relative": 0.10193,
-      "distance_tokens": 4.44568,
-      "sink_mass_pos0": 0.00746,
-      "previous_token_mass": 0.16858
+      "entropy_normalized": 0.54672,
+      "distance_relative": 0.10192,
+      "distance_tokens": 4.44558,
+      "sink_mass_pos0": 0.00745,
+      "previous_token_mass": 0.1686
     },
     {
       "layer": 3,
       "head": 2,
       "label": "local",
-      "entropy_normalized": 0.78858,
-      "distance_relative": 0.29466,
-      "distance_tokens": 13.74696,
-      "sink_mass_pos0": 0.06687,
-      "previous_token_mass": 0.06434
+      "entropy_normalized": 0.78856,
+      "distance_relative": 0.29467,
+      "distance_tokens": 13.74713,
+      "sink_mass_pos0": 0.06688,
+      "previous_token_mass": 0.06435
     },
     {
       "layer": 3,
       "head": 3,
       "label": "local",
-      "entropy_normalized": 0.41172,
-      "distance_relative": 0.08116,
-      "distance_tokens": 3.3753,
-      "sink_mass_pos0": 0.0135,
-      "previous_token_mass": 0.34102
+      "entropy_normalized": 0.41167,
+      "distance_relative": 0.08114,
+      "distance_tokens": 3.37434,
+      "sink_mass_pos0": 0.01348,
+      "previous_token_mass": 0.34103
     },
     {
       "layer": 3,
       "head": 4,
       "label": "local",
-      "entropy_normalized": 0.75867,
-      "distance_relative": 0.27217,
-      "distance_tokens": 13.34194,
-      "sink_mass_pos0": 0.11916,
+      "entropy_normalized": 0.75868,
+      "distance_relative": 0.27215,
+      "distance_tokens": 13.3417,
+      "sink_mass_pos0": 0.11913,
       "previous_token_mass": 0.09272
     },
     {
@@ -868,17 +868,17 @@
       "label": "local",
       "entropy_normalized": 0.37921,
       "distance_relative": 0.04614,
-      "distance_tokens": 1.94863,
+      "distance_tokens": 1.94854,
       "sink_mass_pos0": 0.00068,
-      "previous_token_mass": 0.36399
+      "previous_token_mass": 0.36395
     },
     {
       "layer": 4,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.25438,
-      "distance_relative": 0.04184,
-      "distance_tokens": 1.77305,
+      "entropy_normalized": 0.25437,
+      "distance_relative": 0.04183,
+      "distance_tokens": 1.77285,
       "sink_mass_pos0": 0.00315,
       "previous_token_mass": 0.61897
     },
@@ -886,49 +886,49 @@
       "layer": 4,
       "head": 1,
       "label": "local",
-      "entropy_normalized": 0.60713,
+      "entropy_normalized": 0.6071,
       "distance_relative": 0.16217,
-      "distance_tokens": 6.86397,
-      "sink_mass_pos0": 0.02506,
-      "previous_token_mass": 0.11389
+      "distance_tokens": 6.86368,
+      "sink_mass_pos0": 0.02505,
+      "previous_token_mass": 0.11388
     },
     {
       "layer": 4,
       "head": 2,
       "label": "local",
-      "entropy_normalized": 0.57128,
-      "distance_relative": 0.08592,
-      "distance_tokens": 3.73541,
+      "entropy_normalized": 0.57125,
+      "distance_relative": 0.08591,
+      "distance_tokens": 3.73507,
       "sink_mass_pos0": 0.00461,
-      "previous_token_mass": 0.21742
+      "previous_token_mass": 0.21743
     },
     {
       "layer": 4,
       "head": 3,
       "label": "local",
-      "entropy_normalized": 0.50859,
-      "distance_relative": 0.09406,
-      "distance_tokens": 4.04433,
+      "entropy_normalized": 0.50857,
+      "distance_relative": 0.09407,
+      "distance_tokens": 4.04434,
       "sink_mass_pos0": 0.01063,
-      "previous_token_mass": 0.2522
+      "previous_token_mass": 0.25221
     },
     {
       "layer": 4,
       "head": 4,
       "label": "local",
-      "entropy_normalized": 0.81413,
-      "distance_relative": 0.33186,
-      "distance_tokens": 16.0632,
-      "sink_mass_pos0": 0.09426,
+      "entropy_normalized": 0.81412,
+      "distance_relative": 0.33187,
+      "distance_tokens": 16.06355,
+      "sink_mass_pos0": 0.09428,
       "previous_token_mass": 0.05585
     },
     {
       "layer": 4,
       "head": 5,
       "label": "local",
-      "entropy_normalized": 0.56328,
+      "entropy_normalized": 0.56324,
       "distance_relative": 0.10951,
-      "distance_tokens": 4.71279,
+      "distance_tokens": 4.71283,
       "sink_mass_pos0": 0.00674,
       "previous_token_mass": 0.17651
     },
@@ -938,28 +938,28 @@
       "label": "local",
       "entropy_normalized": 0.02192,
       "distance_relative": 0.02455,
-      "distance_tokens": 1.09016,
+      "distance_tokens": 1.09006,
       "sink_mass_pos0": 0.00018,
-      "previous_token_mass": 0.96547
+      "previous_token_mass": 0.96546
     },
     {
       "layer": 5,
       "head": 1,
       "label": "diffuse",
-      "entropy_normalized": 0.74755,
-      "distance_relative": 0.37669,
-      "distance_tokens": 18.34439,
-      "sink_mass_pos0": 0.0973,
+      "entropy_normalized": 0.74753,
+      "distance_relative": 0.37668,
+      "distance_tokens": 18.3447,
+      "sink_mass_pos0": 0.09729,
       "previous_token_mass": 0.04392
     },
     {
       "layer": 5,
       "head": 2,
       "label": "diffuse",
-      "entropy_normalized": 0.74929,
-      "distance_relative": 0.45607,
-      "distance_tokens": 24.16369,
-      "sink_mass_pos0": 0.11595,
+      "entropy_normalized": 0.74931,
+      "distance_relative": 0.45605,
+      "distance_tokens": 24.16229,
+      "sink_mass_pos0": 0.11593,
       "previous_token_mass": 0.04098
     },
     {
@@ -968,288 +968,288 @@
       "label": "local",
       "entropy_normalized": 0.34807,
       "distance_relative": 0.061,
-      "distance_tokens": 2.71353,
+      "distance_tokens": 2.71317,
       "sink_mass_pos0": 0.00196,
-      "previous_token_mass": 0.33153
+      "previous_token_mass": 0.33154
     },
     {
       "layer": 5,
       "head": 4,
       "label": "local",
-      "entropy_normalized": 0.57017,
+      "entropy_normalized": 0.57019,
       "distance_relative": 0.15151,
-      "distance_tokens": 6.60999,
-      "sink_mass_pos0": 0.0159,
-      "previous_token_mass": 0.10869
+      "distance_tokens": 6.60954,
+      "sink_mass_pos0": 0.01591,
+      "previous_token_mass": 0.1087
     },
     {
       "layer": 5,
       "head": 5,
       "label": "local",
-      "entropy_normalized": 0.59694,
-      "distance_relative": 0.19571,
-      "distance_tokens": 8.69966,
-      "sink_mass_pos0": 0.05317,
-      "previous_token_mass": 0.16095
+      "entropy_normalized": 0.59691,
+      "distance_relative": 0.19573,
+      "distance_tokens": 8.70014,
+      "sink_mass_pos0": 0.05321,
+      "previous_token_mass": 0.16096
     },
     {
       "layer": 6,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.43692,
+      "entropy_normalized": 0.43695,
       "distance_relative": 0.11365,
-      "distance_tokens": 4.84806,
+      "distance_tokens": 4.84777,
       "sink_mass_pos0": 0.00566,
-      "previous_token_mass": 0.21947
+      "previous_token_mass": 0.21948
     },
     {
       "layer": 6,
       "head": 1,
       "label": "local",
-      "entropy_normalized": 0.56063,
-      "distance_relative": 0.26352,
-      "distance_tokens": 11.78869,
-      "sink_mass_pos0": 0.08434,
-      "previous_token_mass": 0.08287
+      "entropy_normalized": 0.56062,
+      "distance_relative": 0.26356,
+      "distance_tokens": 11.78962,
+      "sink_mass_pos0": 0.08439,
+      "previous_token_mass": 0.08288
     },
     {
       "layer": 6,
       "head": 2,
       "label": "content",
-      "entropy_normalized": 0.39786,
-      "distance_relative": 0.58289,
-      "distance_tokens": 30.1955,
-      "sink_mass_pos0": 0.29609,
-      "previous_token_mass": 0.01892
+      "entropy_normalized": 0.39782,
+      "distance_relative": 0.58281,
+      "distance_tokens": 30.19014,
+      "sink_mass_pos0": 0.29598,
+      "previous_token_mass": 0.01893
     },
     {
       "layer": 6,
       "head": 3,
       "label": "content",
-      "entropy_normalized": 0.67802,
-      "distance_relative": 0.36786,
-      "distance_tokens": 18.16015,
-      "sink_mass_pos0": 0.09176,
-      "previous_token_mass": 0.04564
+      "entropy_normalized": 0.67801,
+      "distance_relative": 0.36787,
+      "distance_tokens": 18.16097,
+      "sink_mass_pos0": 0.09178,
+      "previous_token_mass": 0.04565
     },
     {
       "layer": 6,
       "head": 4,
       "label": "local",
       "entropy_normalized": 0.47282,
-      "distance_relative": 0.15511,
-      "distance_tokens": 6.77959,
-      "sink_mass_pos0": 0.03745,
-      "previous_token_mass": 0.23347
+      "distance_relative": 0.15514,
+      "distance_tokens": 6.78007,
+      "sink_mass_pos0": 0.03748,
+      "previous_token_mass": 0.23348
     },
     {
       "layer": 6,
       "head": 5,
       "label": "content",
-      "entropy_normalized": 0.36574,
-      "distance_relative": 0.5751,
-      "distance_tokens": 29.64978,
-      "sink_mass_pos0": 0.28216,
+      "entropy_normalized": 0.36573,
+      "distance_relative": 0.57503,
+      "distance_tokens": 29.64576,
+      "sink_mass_pos0": 0.28206,
       "previous_token_mass": 0.01926
     },
     {
       "layer": 7,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.67614,
-      "distance_relative": 0.22711,
-      "distance_tokens": 10.52756,
-      "sink_mass_pos0": 0.0455,
+      "entropy_normalized": 0.67612,
+      "distance_relative": 0.22713,
+      "distance_tokens": 10.52804,
+      "sink_mass_pos0": 0.04552,
       "previous_token_mass": 0.23759
     },
     {
       "layer": 7,
       "head": 1,
       "label": "local",
-      "entropy_normalized": 0.56345,
-      "distance_relative": 0.28171,
-      "distance_tokens": 12.69298,
-      "sink_mass_pos0": 0.07656,
-      "previous_token_mass": 0.07683
+      "entropy_normalized": 0.56343,
+      "distance_relative": 0.28173,
+      "distance_tokens": 12.69355,
+      "sink_mass_pos0": 0.07658,
+      "previous_token_mass": 0.07682
     },
     {
       "layer": 7,
       "head": 2,
       "label": "content",
       "entropy_normalized": 0.54195,
-      "distance_relative": 0.41515,
-      "distance_tokens": 20.25567,
-      "sink_mass_pos0": 0.1263,
+      "distance_relative": 0.41516,
+      "distance_tokens": 20.25572,
+      "sink_mass_pos0": 0.12633,
       "previous_token_mass": 0.03574
     },
     {
       "layer": 7,
       "head": 3,
       "label": "local",
-      "entropy_normalized": 0.62796,
-      "distance_relative": 0.26683,
-      "distance_tokens": 12.44989,
-      "sink_mass_pos0": 0.06364,
-      "previous_token_mass": 0.09782
+      "entropy_normalized": 0.62794,
+      "distance_relative": 0.26682,
+      "distance_tokens": 12.44887,
+      "sink_mass_pos0": 0.06365,
+      "previous_token_mass": 0.09783
     },
     {
       "layer": 7,
       "head": 4,
       "label": "local",
-      "entropy_normalized": 0.61816,
-      "distance_relative": 0.23834,
-      "distance_tokens": 11.05896,
-      "sink_mass_pos0": 0.03604,
-      "previous_token_mass": 0.09186
+      "entropy_normalized": 0.61815,
+      "distance_relative": 0.23832,
+      "distance_tokens": 11.0576,
+      "sink_mass_pos0": 0.03605,
+      "previous_token_mass": 0.09187
     },
     {
       "layer": 7,
       "head": 5,
       "label": "content",
-      "entropy_normalized": 0.54961,
-      "distance_relative": 0.47982,
-      "distance_tokens": 23.90269,
-      "sink_mass_pos0": 0.2191,
+      "entropy_normalized": 0.54956,
+      "distance_relative": 0.47985,
+      "distance_tokens": 23.90357,
+      "sink_mass_pos0": 0.21919,
       "previous_token_mass": 0.03685
     },
     {
       "layer": 8,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.43246,
-      "distance_relative": 0.13227,
-      "distance_tokens": 6.03759,
+      "entropy_normalized": 0.43248,
+      "distance_relative": 0.13228,
+      "distance_tokens": 6.03786,
       "sink_mass_pos0": 0.0161,
-      "previous_token_mass": 0.26245
+      "previous_token_mass": 0.26244
     },
     {
       "layer": 8,
       "head": 1,
       "label": "content",
-      "entropy_normalized": 0.60721,
-      "distance_relative": 0.46875,
-      "distance_tokens": 24.12033,
-      "sink_mass_pos0": 0.18037,
+      "entropy_normalized": 0.60723,
+      "distance_relative": 0.4687,
+      "distance_tokens": 24.11781,
+      "sink_mass_pos0": 0.18029,
       "previous_token_mass": 0.02671
     },
     {
       "layer": 8,
       "head": 2,
       "label": "content",
-      "entropy_normalized": 0.53914,
-      "distance_relative": 0.54744,
-      "distance_tokens": 28.09099,
-      "sink_mass_pos0": 0.21487,
-      "previous_token_mass": 0.02624
+      "entropy_normalized": 0.53912,
+      "distance_relative": 0.54743,
+      "distance_tokens": 28.09035,
+      "sink_mass_pos0": 0.21489,
+      "previous_token_mass": 0.02625
     },
     {
       "layer": 8,
       "head": 3,
       "label": "content",
-      "entropy_normalized": 0.38973,
-      "distance_relative": 0.58693,
-      "distance_tokens": 30.80103,
-      "sink_mass_pos0": 0.2568,
+      "entropy_normalized": 0.38972,
+      "distance_relative": 0.58699,
+      "distance_tokens": 30.80381,
+      "sink_mass_pos0": 0.25691,
       "previous_token_mass": 0.01694
     },
     {
       "layer": 8,
       "head": 4,
       "label": "content",
-      "entropy_normalized": 0.67226,
+      "entropy_normalized": 0.67228,
       "distance_relative": 0.531,
-      "distance_tokens": 27.54508,
-      "sink_mass_pos0": 0.20213,
+      "distance_tokens": 27.54486,
+      "sink_mass_pos0": 0.20214,
       "previous_token_mass": 0.02201
     },
     {
       "layer": 8,
       "head": 5,
       "label": "local",
-      "entropy_normalized": 0.60702,
-      "distance_relative": 0.34135,
-      "distance_tokens": 16.85939,
-      "sink_mass_pos0": 0.11247,
+      "entropy_normalized": 0.60703,
+      "distance_relative": 0.34137,
+      "distance_tokens": 16.85924,
+      "sink_mass_pos0": 0.11248,
       "previous_token_mass": 0.06153
     },
     {
       "layer": 9,
       "head": 0,
       "label": "local",
-      "entropy_normalized": 0.64572,
-      "distance_relative": 0.3302,
-      "distance_tokens": 16.49791,
-      "sink_mass_pos0": 0.06414,
+      "entropy_normalized": 0.64574,
+      "distance_relative": 0.33019,
+      "distance_tokens": 16.49766,
+      "sink_mass_pos0": 0.06412,
       "previous_token_mass": 0.0638
     },
     {
       "layer": 9,
       "head": 1,
       "label": "content",
-      "entropy_normalized": 0.64753,
-      "distance_relative": 0.43267,
-      "distance_tokens": 21.65315,
-      "sink_mass_pos0": 0.12732,
-      "previous_token_mass": 0.03072
+      "entropy_normalized": 0.6475,
+      "distance_relative": 0.43262,
+      "distance_tokens": 21.65136,
+      "sink_mass_pos0": 0.12726,
+      "previous_token_mass": 0.03073
     },
     {
       "layer": 9,
       "head": 2,
       "label": "content",
-      "entropy_normalized": 0.6477,
-      "distance_relative": 0.35178,
-      "distance_tokens": 17.40051,
-      "sink_mass_pos0": 0.08057,
-      "previous_token_mass": 0.04899
+      "entropy_normalized": 0.64767,
+      "distance_relative": 0.35176,
+      "distance_tokens": 17.3993,
+      "sink_mass_pos0": 0.08058,
+      "previous_token_mass": 0.04898
     },
     {
       "layer": 9,
       "head": 3,
       "label": "content",
       "entropy_normalized": 0.64853,
-      "distance_relative": 0.40677,
-      "distance_tokens": 20.17474,
-      "sink_mass_pos0": 0.13602,
-      "previous_token_mass": 0.04394
+      "distance_relative": 0.40671,
+      "distance_tokens": 20.1719,
+      "sink_mass_pos0": 0.13598,
+      "previous_token_mass": 0.04395
     },
     {
       "layer": 9,
       "head": 4,
       "label": "diffuse",
-      "entropy_normalized": 0.72901,
-      "distance_relative": 0.43213,
-      "distance_tokens": 22.03874,
-      "sink_mass_pos0": 0.0757,
-      "previous_token_mass": 0.03202
+      "entropy_normalized": 0.72904,
+      "distance_relative": 0.4321,
+      "distance_tokens": 22.03721,
+      "sink_mass_pos0": 0.07566,
+      "previous_token_mass": 0.03203
     },
     {
       "layer": 9,
       "head": 5,
       "label": "diffuse",
-      "entropy_normalized": 0.82463,
+      "entropy_normalized": 0.82462,
       "distance_relative": 0.46391,
-      "distance_tokens": 24.85401,
+      "distance_tokens": 24.8534,
       "sink_mass_pos0": 0.09059,
-      "previous_token_mass": 0.04454
+      "previous_token_mass": 0.04455
     },
     {
       "layer": 10,
       "head": 0,
       "label": "content",
-      "entropy_normalized": 0.51212,
-      "distance_relative": 0.50913,
-      "distance_tokens": 25.89801,
-      "sink_mass_pos0": 0.14247,
+      "entropy_normalized": 0.51215,
+      "distance_relative": 0.50912,
+      "distance_tokens": 25.89657,
+      "sink_mass_pos0": 0.14242,
       "previous_token_mass": 0.02284
     },
     {
       "layer": 10,
       "head": 1,
       "label": "content",
-      "entropy_normalized": 0.61723,
+      "entropy_normalized": 0.61726,
       "distance_relative": 0.3993,
-      "distance_tokens": 20.46865,
-      "sink_mass_pos0": 0.08186,
+      "distance_tokens": 20.46835,
+      "sink_mass_pos0": 0.08184,
       "previous_token_mass": 0.03747
     },
     {
@@ -1257,10 +1257,10 @@
       "head": 2,
       "label": "content",
       "entropy_normalized": 0.58619,
-      "distance_relative": 0.43073,
-      "distance_tokens": 22.36103,
-      "sink_mass_pos0": 0.12829,
-      "previous_token_mass": 0.04124
+      "distance_relative": 0.43074,
+      "distance_tokens": 22.36078,
+      "sink_mass_pos0": 0.1283,
+      "previous_token_mass": 0.04125
     },
     {
       "layer": 10,
@@ -1276,21 +1276,21 @@
       "layer": 10,
       "head": 4,
       "label": "local",
-      "entropy_normalized": 0.56735,
-      "distance_relative": 0.32101,
-      "distance_tokens": 15.46342,
-      "sink_mass_pos0": 0.0693,
+      "entropy_normalized": 0.56737,
+      "distance_relative": 0.32102,
+      "distance_tokens": 15.46363,
+      "sink_mass_pos0": 0.06931,
       "previous_token_mass": 0.05823
     },
     {
       "layer": 10,
       "head": 5,
       "label": "content",
-      "entropy_normalized": 0.50041,
-      "distance_relative": 0.48244,
-      "distance_tokens": 23.92247,
-      "sink_mass_pos0": 0.16693,
-      "previous_token_mass": 0.02954
+      "entropy_normalized": 0.50037,
+      "distance_relative": 0.4825,
+      "distance_tokens": 23.92463,
+      "sink_mass_pos0": 0.16699,
+      "previous_token_mass": 0.02953
     }
   ],
   "label_counts": {

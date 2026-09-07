@@ -499,8 +499,21 @@ or Devanagari glyphs and token labels would render as empty boxes.
 
 Each figure shows an early layer (0), a middle layer (5) and the final layer
 (10), six heads each, with query position on the vertical axis and key position
-on the horizontal. Every map is strictly lower-triangular — visual confirmation
-of the causal mask.
+on the horizontal. The grey upper triangle is the masked future — rendered as a
+distinct colour rather than as dark, because "could not be attended to" and
+"attended to with probability ≈ 0" are different statements. Every map is
+strictly lower-triangular: visual confirmation of the causal mask.
+
+All panels share one power-law colour scale ($\\gamma = 0.45$), so the colour
+bar is true for every panel. Per-panel autoscaling with a shared bar would make
+the bar meaningless for all but one. The power scale rather than a linear one is
+what makes the faint vertical stripes visible at all: attention mass concentrates
+heavily, so on a linear scale everything except the sink column washes out.
+
+Three structures are worth looking for, and all three appear in both languages:
+the **sink column** at $j = 0$; the **bright sub-diagonal** of the previous-token
+head at layer 5, head 0; and the **L-shaped dark region** at the document
+boundary, discussed in §4.8.
 
 ### 4.7 Attention entropy and distance
 
@@ -595,6 +608,32 @@ machinery is well developed — hence real words, correct within-clause grammar,
 and 4–5 words of coherent continuation, which is roughly the span of the
 layer-3–5 local heads. There is nothing above the ~25-token range doing topic
 maintenance, so past that horizon the model drifts into unrelated clauses.
+
+**Both models learned to reset context at document boundaries — the clearest
+single result in this phase.** The training stream concatenates documents, and
+both sampled passages happen to cross a boundary: Telugu at positions 74–75
+(`</s>` then `<s>`), Nepali at 54–55, as the token tables in
+`report/phase2/stats/*_attention_tokens.md` confirm.
+
+In layers 5 and 10 of *both* models the heatmaps show a sharp L-shaped dark
+region beginning exactly at that index: queries after the boundary place almost
+no mass on keys before it, while attention within each document stays dense.
+The boundary token itself becomes a bright vertical column — a local anchor
+playing the same role for its document that position 0 plays for the sequence.
+
+Nothing supervised this. The objective is next-token prediction and nothing in
+it states that `</s>`/`<s>` separates unrelated text. The models discovered that
+tokens before a boundary do not predict tokens after it and learned to gate them
+out. This is content-conditional behaviour, not positional bookkeeping, and it
+appeared independently in two models trained on separate corpora — which is
+also why the layer-5 and layer-10 rows of the two heatmap figures look so alike
+despite the languages sharing nothing.
+
+**A pure previous-token head sits at layer 5, head 0 in both models.** It is
+visible as a single bright sub-diagonal with everything else black, and it is
+the 0.02 normalized-entropy cell in the Telugu table above — the most committed
+head in either model. Two independent training runs put the same specialized
+head in the same slot.
 
 **Attention sinks are present but not dominant.** Sink mass (probability parked
 on position 0, the standard no-op target when a head has nothing to contribute)

@@ -285,47 +285,92 @@ def classify_heads(summary: dict, local_threshold: float = 0.35,
 # Kept strictly separate from the computation above (Phase 2 guideline 4).
 
 def plot_head_heatmaps(attn: np.ndarray, layers: list[int], heads: list[int],
-                       out_path: Path, language: str, max_positions: int = 96
-                       ) -> None:
+                       out_path: Path, language: str, max_positions: int = 96,
+                       gamma: float = 0.45) -> None:
     """Grid of attention heatmaps: one row per layer, one column per head.
+
+    THREE CHOICES THAT MATTER FOR HONESTY AND LEGIBILITY
+    ----------------------------------------------------
+    *One shared colour scale.* Every panel is normalized identically and the
+    single colour bar therefore describes all of them. Per-panel autoscaling
+    with a shared bar -- the obvious first implementation -- makes the bar a
+    lie for every panel but one, and invites the reader to compare intensities
+    that are not on the same scale.
+
+    *A power-law scale rather than a linear one.* Attention mass concentrates:
+    a few cells hold most of the probability and the rest sit near zero, so on
+    a linear scale everything except the sink column and the diagonal washes
+    out to background. ``PowerNorm(gamma=0.45)`` lifts the low end while
+    preserving the ordering, which is what makes the faint vertical stripes --
+    content heads locking onto specific keys -- visible at all.
+
+    *The masked future is grey, not dark.* Rendering the forbidden upper
+    triangle as NaN on a colormap with ``set_bad`` distinguishes "this position
+    could not be attended to" from "this position was attended to with
+    probability ~0". Those are different statements and a dark-on-dark
+    rendering conflates them.
 
     Args:
         attn: ``(L, H, T, T)`` attention array.
-        layers: Layer indices to show (an early and a late one at minimum).
+        layers: Layer indices to show; an early and a late one at minimum.
         heads: Head indices to show.
         out_path: PNG destination.
         language: Language name, for the figure title.
-        max_positions: Crop to the leading ``T x T`` corner so individual cells
-            stay visible; full 512x512 maps render as an unreadable smear.
+        max_positions: Crop to the leading ``T x T`` corner. A full 512x512 map
+            has 262,144 cells and renders as an unreadable smear at any
+            printable size.
+        gamma: Exponent of the power-law colour scale; lower brightens the low
+            end further.
     """
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.colors import PowerNorm
 
     T = min(max_positions, attn.shape[-1])
-    fig, axes = plt.subplots(len(layers), len(heads),
-                             figsize=(3.1 * len(heads), 3.0 * len(layers)),
-                             squeeze=False)
+    n_rows, n_cols = len(layers), len(heads)
+    shown = np.stack([[attn[l][h][:T, :T] for h in heads] for l in layers])
+
+    # Percentile over the allowed (lower-triangular) cells only: including the
+    # structural zeros above the diagonal would drag every percentile down.
+    tri = np.tril(np.ones((T, T), dtype=bool))
+    vmax = float(np.percentile(shown[..., tri], 99.0))
+    norm = PowerNorm(gamma=gamma, vmin=0.0, vmax=max(vmax, 1e-6))
+    cmap = plt.get_cmap("magma").copy()
+    cmap.set_bad("#E8E8E8")
+
+    fig, axes = plt.subplots(n_rows, n_cols,
+                             figsize=(2.35 * n_cols + 1.9, 2.35 * n_rows + 1.15),
+                             squeeze=False, layout="constrained")
     im = None
     for r, l in enumerate(layers):
         for c, h in enumerate(heads):
             ax = axes[r][c]
-            # vmax from a high percentile: a single near-1.0 sink cell would
-            # otherwise flatten every other cell to the bottom of the colormap.
-            block = attn[l, h, :T, :T]
-            vmax = float(np.percentile(block[block > 0], 99)) if block.any() else 1.0
-            im = ax.imshow(block, cmap="viridis", aspect="equal",
-                           origin="upper", vmin=0.0, vmax=max(vmax, 1e-6))
-            ax.set_title(f"layer {l}, head {h}", fontsize=10)
-            ax.set_xlabel("key position $j$", fontsize=8)
-            ax.set_ylabel("query position $i$", fontsize=8)
+            block = np.where(tri, shown[r, c], np.nan)
+            im = ax.imshow(block, cmap=cmap, norm=norm, aspect="equal",
+                           origin="upper", interpolation="nearest")
+            # Label only the outer edge: 18 copies of the same axis label is
+            # noise, and at this panel size they overlap the row below.
+            if r == 0:
+                ax.set_title(f"head {h}", fontsize=11)
+            if c == 0:
+                ax.set_ylabel(f"layer {l}\n\nquery position $i$", fontsize=9)
+            if r == n_rows - 1:
+                ax.set_xlabel("key position $j$", fontsize=9)
+            ax.set_xticks([0, T // 2, T - 1])
+            ax.set_yticks([0, T // 2, T - 1])
             ax.tick_params(labelsize=7)
+            if c:
+                ax.set_yticklabels([])
+            if r != n_rows - 1:
+                ax.set_xticklabels([])
 
-    fig.suptitle(f"Causal self-attention weights — {language} "
-                 f"(first {T} positions)", fontsize=13)
-    cbar = fig.colorbar(im, ax=axes, fraction=0.020, pad=0.02)
-    cbar.set_label("attention probability $p_{ij}$", fontsize=9)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    fig.suptitle(f"Causal self-attention weights \u2014 {language}  "
+                 f"(first {T} positions; grey = masked future)", fontsize=13)
+    cbar = fig.colorbar(im, ax=axes, fraction=0.024, pad=0.015)
+    cbar.set_label(f"attention probability $p_{{ij}}$  (power scale, "
+                   f"$\\gamma$={gamma}; shared across all panels)", fontsize=9)
+    fig.savefig(out_path, dpi=140)
     plt.close(fig)
     logger.info("  wrote %s", out_path)
 

@@ -11,56 +11,23 @@ divides out the tokenizer and is the number to compare.
 
 ### Validation split
 
-| metric | Model H — Telugu | Model L — Nepali |
-|---|---:|---:|
-| tokens scored | 3,751,936 | 4,964,352 |
-| bytes per token | 10.3222 | 11.5191 |
-| cross-entropy (nats/token) | 4.06372 | 3.72264 |
-| **perplexity** | 58.19 | 41.37 |
-| **bits per byte** | 0.5680 | 0.4662 |
+| metric |  |
+|---|
+| tokens scored |  |
+| bytes per token |  |
+| cross-entropy (nats/token) |  |
+| **perplexity** |  |
+| **bits per byte** |  |
 
 ### Test split
 
-| metric | Model H — Telugu | Model L — Nepali |
-|---|---:|---:|
-| tokens scored | 3,899,392 | 4,997,120 |
-| bytes per token | 10.2489 | 11.5122 |
-| cross-entropy (nats/token) | 4.09868 | 3.73057 |
-| **perplexity** | 60.26 | 41.70 |
-| **bits per byte** | 0.5770 | 0.4675 |
-
-## 2. Generation quality and diversity
-
-64-token prefixes from the held-out test split, 64 tokens
-generated. BLEU and ROUGE-L use whitespace tokenization; chrF++
-is character-based and is the most trustworthy of the three for
-these scripts. All three compare a generation against the one
-continuation that happened to follow in the corpus, which for
-open-ended generation is a weak proxy for quality — they are
-reported because they are required and because they are
-comparable *between* the two models under identical conditions.
-
-### Model H — Telugu
-
-| metric | greedy | t0.5 | t1.0 | t1.5 |
-|---|---:|---:|---:|---:|
-| BLEU-4 | 0.3355 | 0.4133 | 0.0870 | 0.0294 |
-| chrF++ | 10.2037 | 14.3944 | 17.0290 | 16.2336 |
-| ROUGE-L | 0.0250 | 0.0305 | 0.0213 | 0.0091 |
-| repetition rate (4-gram) | 0.6542 | 0.1476 | 0.0003 | 0.0000 |
-| Distinct-1 | 0.1330 | 0.3963 | 0.7511 | 0.8284 |
-| Distinct-2 | 0.1854 | 0.6717 | 0.9890 | 0.9989 |
-
-### Model L — Nepali
-
-| metric | greedy | t0.5 | t1.0 | t1.5 |
-|---|---:|---:|---:|---:|
-| BLEU-4 | 3.8346 | 4.1533 | 3.6104 | 0.8601 |
-| chrF++ | 15.3287 | 17.6747 | 19.4145 | 15.9964 |
-| ROUGE-L | 0.0868 | 0.0932 | 0.0871 | 0.0329 |
-| repetition rate (4-gram) | 0.4995 | 0.1854 | 0.0035 | 0.0000 |
-| Distinct-1 | 0.1609 | 0.3085 | 0.5622 | 0.7214 |
-| Distinct-2 | 0.2551 | 0.6064 | 0.9321 | 0.9919 |
+| metric |  |
+|---|
+| tokens scored |  |
+| bytes per token |  |
+| cross-entropy (nats/token) |  |
+| **perplexity** |  |
+| **bits per byte** |  |
 
 ## 3. Attention summary
 
@@ -68,36 +35,4 @@ Entropy is normalized by `ln(i+1)`, the maximum available at query
 position `i` under the causal mask; distance is the expected
 backward offset in tokens. Both exclude the first 16 positions,
 which are degenerate by construction.
-
-### Model H — Telugu — head types: {'diffuse': 20, 'local': 29, 'content': 17}
-
-| layer | norm. entropy | distance (tokens) | distance (rel.) | sink mass | prev-token mass |
-|---:|---:|---:|---:|---:|---:|
-| 0 | 0.935 | 24.67 | 0.450 | 0.033 | 0.030 |
-| 1 | 0.932 | 28.16 | 0.514 | 0.095 | 0.028 |
-| 2 | 0.829 | 23.22 | 0.429 | 0.132 | 0.068 |
-| 3 | 0.573 | 6.66 | 0.145 | 0.035 | 0.209 |
-| 4 | 0.553 | 6.20 | 0.138 | 0.024 | 0.239 |
-| 5 | 0.506 | 10.27 | 0.211 | 0.047 | 0.275 |
-| 6 | 0.485 | 16.90 | 0.343 | 0.133 | 0.103 |
-| 7 | 0.596 | 15.15 | 0.318 | 0.095 | 0.096 |
-| 8 | 0.541 | 22.24 | 0.435 | 0.164 | 0.069 |
-| 9 | 0.691 | 20.44 | 0.403 | 0.096 | 0.044 |
-| 10 | 0.585 | 21.05 | 0.416 | 0.103 | 0.040 |
-
-### Model L — Nepali — head types: {'diffuse': 25, 'sink': 1, 'local': 24, 'content': 16}
-
-| layer | norm. entropy | distance (tokens) | distance (rel.) | sink mass | prev-token mass |
-|---:|---:|---:|---:|---:|---:|
-| 0 | 0.939 | 25.08 | 0.455 | 0.030 | 0.031 |
-| 1 | 0.905 | 28.78 | 0.533 | 0.141 | 0.026 |
-| 2 | 0.759 | 25.13 | 0.462 | 0.209 | 0.067 |
-| 3 | 0.588 | 5.98 | 0.132 | 0.018 | 0.209 |
-| 4 | 0.590 | 11.11 | 0.224 | 0.052 | 0.228 |
-| 5 | 0.519 | 12.24 | 0.243 | 0.072 | 0.259 |
-| 6 | 0.532 | 21.35 | 0.411 | 0.148 | 0.098 |
-| 7 | 0.655 | 16.30 | 0.331 | 0.081 | 0.100 |
-| 8 | 0.584 | 26.90 | 0.520 | 0.179 | 0.032 |
-| 9 | 0.620 | 25.03 | 0.478 | 0.151 | 0.054 |
-| 10 | 0.711 | 23.33 | 0.440 | 0.052 | 0.037 |
 
