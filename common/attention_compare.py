@@ -238,8 +238,7 @@ def plot_paired_heatmaps(attn_pre: np.ndarray, attn_ft: np.ndarray,
             if r != n_rows - 1:
                 ax.set_xticklabels([])
     fig.suptitle(f"Attention on a comparative-reasoning prompt — {language}: "
-                 f"pretrained vs finetuned
-(dashed line = first answer token; "
+                 f"pretrained vs finetuned\n(dashed line = first answer token; "
                  f"grey = masked future)", fontsize=11)
     cbar = fig.colorbar(im, ax=axes, fraction=0.024, pad=0.015)
     cbar.set_label(f"attention probability $p_{{ij}}$ (power scale, "

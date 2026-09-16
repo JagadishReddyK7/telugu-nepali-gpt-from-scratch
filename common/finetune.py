@@ -40,10 +40,18 @@ THE LOSS
 Per-token cross-entropy, weighted: answer tokens (and the closing ``</s>``)
 weigh 1.0, prompt tokens weigh ``prompt_loss_weight``. At 1.0 this is plain
 language modelling over the packed stream; at 0.0 it is answer-only
-supervision. The default is 1.0 -- with answers of two or three tokens, the
-prompt is where most of the gradient signal about entity names and relation
-words lives, and a 25M-parameter model has no separate instruction-following
-machinery to protect from it.
+supervision.
+
+Run 1 used 1.0 and failed in an instructive way: validation exact match
+plateaued at ~0.15 within 50 steps, and on the held-out-name test split the
+model answered name questions with *training* names (superlative accuracy
+0.5%, far below the 33% of guessing a name from the prompt). Full-sequence
+loss asks the model to predict the first mention of every random name inside
+the premises, which is possible only through a prior over names -- so it
+trains precisely the behaviour that is wrong at the answer position, where
+the name must be *copied* from context. Run 2 sets the weight to 0.0 and
+enlarges the name pool ~6x with compound names, so memorising the answer
+distribution stops being the cheapest solution.
 
 The **learning rate is a pure function of the step** (warmup then cosine),
 exactly as in pretraining, so no scheduler object needs to be serialized.

@@ -205,7 +205,15 @@ class ReasoningGenerator:
                   n: int) -> list[str]:
         """Sample ``n`` distinct entities of ``domain`` from the split's pool."""
         kind = "names" if domain == "person" else "objects"
-        return rng.sample(self.pools[kind][split], n)
+        pool = self.pools[kind][split]
+        # Compound names contain simple ones ("రామ" in "రామకృష్ణ", "राम" in
+        # "राम प्रसाद"). Two entities in one example must not nest, or the
+        # premises become ambiguous to read; resample until none does.
+        for _ in range(100):
+            ents = rng.sample(pool, n)
+            if not any(a != b and a in b for a in ents for b in ents):
+                return ents
+        raise RuntimeError("could not sample non-nested entities")
 
     # ------------------------------------------------------------- helpers
 

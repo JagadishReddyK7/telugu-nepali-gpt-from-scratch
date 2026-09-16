@@ -40,6 +40,23 @@ NAMES = [
     "సందీప్", "మాధవి", "వినయ్", "కల్పన", "సురేంద్ర", "సుమతి",
 ]
 
+# Compound given names, which are the norm in Telugu (వెంకటరావు, శివప్రసాద్,
+# నాగలక్ష్మి ...): a first element and a second element, written joined. The
+# product gives several hundred natural names, and that matters for the
+# finetune: with only ~70 names the model learned the *distribution of
+# answers* instead of learning to copy the right entity out of the premises
+# (see the Phase 3 report, run 1). Held-out pools are drawn from the union.
+_FIRST_M = ["రామ", "కృష్ణ", "వెంకట", "శివ", "నాగ", "సాయి", "హరి", "సూర్య",
+            "చంద్ర", "శ్రీ", "రవి", "గోపాల", "విజయ", "ఆనంద", "రాజ", "భాస్కర",
+            "మధు", "సత్య", "ప్రభు", "జయ", "లక్ష్మణ", "నరసింహ", "వర", "మురళి"]
+_SECOND_M = ["రావు", "ప్రసాద్", "రెడ్డి", "కుమార్", "నాయుడు", "మూర్తి", "శంకర్",
+             "రాజు", "బాబు", "రమణ", "నారాయణ", "మోహన్", "కృష్ణ", "కాంత్"]
+_FIRST_F = ["లక్ష్మీ", "నాగ", "సాయి", "శ్రీ", "పద్మ", "జయ", "సత్య", "విజయ",
+            "రాజ", "సూర్య", "చంద్ర", "రమ", "హేమ", "ఉమ", "భవ", "వర"]
+_SECOND_F = ["దేవి", "లత", "కుమారి", "ప్రియ", "వల్లి", "శ్రీ", "మణి", "రాణి"]
+COMPOUND_NAMES = ([a + b for a in _FIRST_M for b in _SECOND_M]
+                  + [a + b for a in _FIRST_F for b in _SECOND_F])
+
 OBJECTS = [
     "పుస్తకం", "పెన్ను", "బ్యాగు", "గడియారం", "సైకిల్", "కుర్చీ", "బల్ల", "ఫోను",
     "టీవీ", "రేడియో", "గొడుగు", "చొక్కా", "చెప్పులు", "బొమ్మ", "దీపం", "కెమెరా",
@@ -49,7 +66,7 @@ OBJECTS = [
 
 LEXICON = {
     "language": "telugu",
-    "names": NAMES,
+    "names": NAMES + COMPOUND_NAMES,
     "objects": OBJECTS,
     "digits": "ascii",
     "answer_prefix": "జవాబు:",

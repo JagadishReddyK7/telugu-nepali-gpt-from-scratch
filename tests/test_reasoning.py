@@ -190,10 +190,11 @@ def test_committed_dataset_matches_generator():
         if not path.exists():
             continue
         rows = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        sizes = json.loads((path.parent / "stats.json").read_text(encoding="utf-8"))["sizes"]
         gen = ReasoningGenerator(lex, seed)
-        gen.generate_split("train", 30_000)      # advances the dedup set
-        gen.generate_split("validation", 2_000)
-        regen = gen.generate_split("test", 3_000)
+        gen.generate_split("train", sizes["train"])      # advances the dedup set
+        gen.generate_split("validation", sizes["validation"])
+        regen = gen.generate_split("test", sizes["test"])
         assert len(rows) == len(regen)
         assert all(r["prompt"] == g.prompt and r["answer"] == g.answer
                    for r, g in zip(rows[:200], regen[:200]))

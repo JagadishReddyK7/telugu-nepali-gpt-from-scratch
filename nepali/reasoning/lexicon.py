@@ -40,6 +40,24 @@ NAMES = [
     "सुरेन्द्र", "सुमति",
 ]
 
+# Compound given names, the norm in Nepali (राम प्रसाद, हरि बहादुर, सीता देवी
+# ...): a first element and a second element, written with a space. The product
+# gives several hundred natural names; with only ~70 names the finetune learned
+# the *distribution of answers* rather than to copy the right entity out of
+# the premises (see the Phase 3 report, run 1). Held-out pools are drawn from
+# the union.
+_FIRST_M = ["राम", "हरि", "कृष्ण", "शिव", "गोपाल", "नारायण", "विष्णु", "सूर्य",
+            "चन्द्र", "देव", "भीम", "गणेश", "लक्ष्मण", "धन", "बल", "मान", "प्रेम",
+            "दिल", "जय", "टेक", "पूर्ण", "रवि", "ज्ञान", "कुल"]
+_SECOND_M = ["प्रसाद", "बहादुर", "कुमार", "राज", "लाल", "नाथ", "दत्त", "मणि",
+             "कान्त", "चन्द्र", "नारायण", "शंकर"]
+_FIRST_F = ["सीता", "गीता", "लक्ष्मी", "सरस्वती", "पार्वती", "दुर्गा", "कमला",
+            "शान्ति", "माया", "सुन", "फूल", "मन", "राधा", "सावित्री", "इन्दिरा",
+            "गंगा", "यमुना", "तारा"]
+_SECOND_F = ["देवी", "कुमारी", "माया", "लक्ष्मी"]
+COMPOUND_NAMES = ([a + " " + b for a in _FIRST_M for b in _SECOND_M]
+                  + [a + " " + b for a in _FIRST_F for b in _SECOND_F])
+
 OBJECTS = [
     "किताब", "कलम", "झोला", "घडी", "साइकल", "कुर्सी", "टेबुल", "मोबाइल", "टिभी",
     "रेडियो", "छाता", "कमिज", "जुत्ता", "खेलौना", "बत्ती", "क्यामेरा", "ल्यापटप",
@@ -49,7 +67,7 @@ OBJECTS = [
 
 LEXICON = {
     "language": "nepali",
-    "names": NAMES,
+    "names": NAMES + COMPOUND_NAMES,
     "objects": OBJECTS,
     "digits": "devanagari",
     "answer_prefix": "उत्तर:",
