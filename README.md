@@ -19,6 +19,7 @@ vocabulary entry, or weight crosses between them.
 
 **Phase 1 — data and tokenizers: [`report/phase1/phase1_report.md`](report/phase1/phase1_report.md).**
 **Phase 2 — model, pretraining and evaluation: [`report/phase2/phase2_report.md`](report/phase2/phase2_report.md).**
+**Phase 3 — reasoning finetuning, attention comparison, and the consolidated final report: [`report/phase3/phase3_report.md`](report/phase3/phase3_report.md).**
 
 ---
 
@@ -39,8 +40,18 @@ vocabulary entry, or weight crosses between them.
 | Model L pretrained checkpoint — `latest.pt` | https://drive.google.com/file/d/1xccvCBYuj0f5t0b7mv4asQONax4w9NEa/view?usp=drive_link |
 | Ablation (no positional emb.) — `best.pt` | https://drive.google.com/file/d/1CtL5VKZj1wZd3r8STwqK0hv7H0mOywLo/view?usp=drive_link |
 | Ablation (no positional emb.) — `latest.pt` | https://drive.google.com/file/d/14vhOJ-xgheIxp0vt-cYKfLTim9Un0esG/view?usp=drive_link |
-| Model H finetuned checkpoint | Phase 3 |
-| Model L finetuned checkpoint | Phase 3 |
+| Model H reasoning-finetuned checkpoint — `best.pt` | https://drive.google.com/file/d/1NtRRvAnG8pD1-PDFIXp2kOTSNuOOR60y/view?usp=drive_link |
+| Model H reasoning-finetuned checkpoint — `latest.pt` | https://drive.google.com/file/d/1wxfRUUJlusX0SCZgMdeWXUpmkY9qhu2c/view?usp=drive_link |
+| Model L reasoning-finetuned checkpoint — `best.pt` | https://drive.google.com/file/d/15qlhFoMqbJVC_JlfSQcIs7G0f60l-BOO/view?usp=drive_link |
+| Model L reasoning-finetuned checkpoint — `latest.pt` | https://drive.google.com/file/d/1kX62B3lxp8W687tDEO0ZIXAAsasW9jup/view?usp=drive_link |
+
+Finetuned checkpoints use the same resume-capable format as the pretrained
+ones (weights, both AdamW moments, GradScaler, step, tokens, full config, RNG
+state) plus the epoch / batch position of the finetune; ~310 MB each. Place
+them at `checkpoints/telugu_reasoning/best.pt` and
+`checkpoints/nepali_reasoning/best.pt` to run the Phase 3 evaluation. The
+synthetic reasoning datasets are small and are committed in the branch
+(`<lang>/reasoning/dataset/`), so they need no Drive link.
 
 ---
 
@@ -51,20 +62,34 @@ vocabulary entry, or weight crosses between them.
 │   ├── text_norm.py         # Unicode NFC normalization, script-ratio filtering
 │   ├── langid.py            # fastText language ID — separates Nepali from Hindi
 │   ├── scraper.py           # Polite, resumable, sitemap-driven news crawler
-│   ├── sitemap_discovery.py # Robust sitemap location
-│   └── run_crawl.py         # Shared crawl entry point
+│   ├── model.py             # Decoder-only Transformer from primitives (Phase 2)
+│   ├── train.py             # Resumable pretraining loop
+│   ├── evaluate.py          # Cross-entropy / perplexity / bits-per-byte
+│   ├── generate.py          # BLEU / chrF++ / ROUGE-L, diversity diagnostics
+│   ├── attention.py         # Heatmaps, entropy, distance, head labels
+│   ├── reasoning_gen.py     # Synthetic reasoning-data engine (Phase 3)
+│   ├── finetune.py          # Resumable reasoning finetune
+│   ├── reasoning_eval.py    # Exact match + scored-choice accuracy
+│   └── attention_compare.py # Pretrained-vs-finetuned attention on the same prompts
 ├── telugu/                  # ── MODEL H ──────────────────────────────
 │   ├── collect/             # Scrapers + HF corpus ingestion
 │   ├── clean/               # Filtering, dedup, splits, statistics
 │   ├── tokenizer/           # BPE training + vocab sweep; .model/.vocab files
-│   └── configs/telugu.yaml  # Single source of truth for all Telugu decisions
+│   ├── reasoning/           # Telugu lexicon + generator; dataset/ (val, test committed)
+│   └── configs/             # telugu.yaml, model.yaml, model_nopos.yaml, finetune.yaml
 ├── nepali/                  # ── MODEL L ── (same structure, zero shared data)
 │   ├── collect/
 │   ├── clean/
 │   ├── tokenizer/
-│   └── configs/nepali.yaml
+│   ├── reasoning/
+│   └── configs/
+├── scripts/                 # run_eval.py (Phase 2), run_phase3.py, plotting, Kaggle staging
+├── tests/                   # 40 tests: model, training/resume, reasoning/finetune
+├── notebooks/               # Kaggle notebook that produced the Phase 3 numbers
 ├── report/                  # Per-phase reports, tables, plots, heatmaps
-│   └── phase1/
+│   ├── phase1/
+│   ├── phase2/
+│   └── phase3/              # final consolidated report lives here
 ├── requirements.txt
 └── README.md
 ```
@@ -323,11 +348,15 @@ Outputs land in `report/phase2/stats/` (JSON plus `comparison.md`) and
 ### 10. Tests
 
 ```bash
-python -m pytest tests/ -q     # 24 pass: 15 model, 9 training / checkpointing
+python -m pytest tests/ -q     # 40 pass: 15 model, 9 training / checkpointing, 16 reasoning / finetune
+# or, without pytest:
+python tests/test_model.py && python tests/test_train.py && python tests/test_reasoning.py
 ```
 
 Includes `test_causal_mask_blocks_the_future` (changing token t+1 leaves the
-logits at position t bit-identical) and `test_resume_is_bit_exact`.
+logits at position t bit-identical), `test_resume_is_bit_exact`, and for
+Phase 3 `test_labels_are_correct_by_independent_derivation`,
+`test_no_entity_leakage_between_splits` and `test_finetune_resume_is_bit_exact`.
 
 ### 11. Ablation (bonus)
 
@@ -339,6 +368,87 @@ difference is attributable to the embeddings alone.
 python -m common.train --config telugu/configs/model_nopos.yaml
 python scripts/run_eval.py --runs telugu_nopos --n-prompts 200
 ```
+
+---
+
+## Phase 3 results
+
+Full analysis and the consolidated final report:
+**[`report/phase3/phase3_report.md`](report/phase3/phase3_report.md)**.
+Machine-generated tables: [`report/phase3/stats/comparison.md`](report/phase3/stats/comparison.md).
+
+| | Model H — Telugu | Model L — Nepali |
+|---|---:|---:|
+| Synthetic reasoning set (train / val / test) | 6,000 / 500 / 1,000 | 6,000 / 500 / 1,000 |
+| Test exact match — pretrained | 0.005 | 0.000 |
+| Test exact match — **finetuned** | **0.269** | **0.250** |
+| Scored-choice accuracy, finetuned (chance 0.32) | 0.361 | 0.364 |
+| Exact match on held-out phrasing / 3-hop chains | 0.252 / 0.193 | 0.227 / 0.149 |
+| Test bits per byte after finetuning (was 0.577 / 0.468) | 0.959 | 0.926 |
+| Finetune wall clock (one Kaggle T4) | 341 s | 362 s |
+
+Each model was finetuned on its own synthetic comparative-reasoning set —
+transitive chains, numeric comparisons, chained relations (including
+"cannot be determined"), yes/no, and full orderings, in Telugu and Nepali
+script with held-out entity names and held-out phrasings in the test split.
+Finetuning taught both models the task format (0% → ~60% well-formed answers)
+and lifted exact match from ~0 to ~26%, with the two resource tiers
+indistinguishable; the report's error analysis and the pretrained-vs-finetuned
+attention comparison show that the gain is format and entity-lookup rather
+than a comparison procedure, and quantify the language-modelling cost of
+answer-only finetuning. See §3–§5 of the report.
+
+### Reproduction, continued from step 11
+
+### 12. Generate the reasoning datasets
+
+Deterministic (seeds 1337 / 2718); validation and test are also committed.
+
+```bash
+python -m telugu.reasoning.generate
+python -m nepali.reasoning.generate
+```
+
+### 13. Finetune each model from its own pretrained checkpoint
+
+Place the Phase 2 checkpoints at `checkpoints/telugu/best.pt` and
+`checkpoints/nepali/best.pt` (Drive links above). About 6 minutes per model
+on one T4.
+
+```bash
+python -m common.finetune --config telugu/configs/finetune.yaml
+python -m common.finetune --config nepali/configs/finetune.yaml
+
+# clean stop after N steps, then bit-exact resume
+python -m common.finetune --config telugu/configs/finetune.yaml --session-steps 200
+python -m common.finetune --config telugu/configs/finetune.yaml --resume
+```
+
+### 14. Evaluate Phase 3
+
+Skip step 13 by placing the finetuned checkpoints (Drive links above) at
+`checkpoints/telugu_reasoning/best.pt` and `checkpoints/nepali_reasoning/best.pt`.
+
+```bash
+# reasoning accuracy for pretrained and finetuned checkpoints, LM retention
+# on the Phase 1 test split, pretrained-vs-finetuned attention comparison,
+# tables and figures
+python scripts/run_phase3.py --langs telugu nepali
+
+# tables and figures only, from the committed JSON and logs (no GPU needed)
+python scripts/run_phase3.py --tables-only
+```
+
+Outputs land in `report/phase3/stats/` (JSON, Markdown, `comparison.md`),
+`report/phase3/figures/` (PNG) and `report/phase3/logs/` (finetune JSONL).
+
+### 15. On Kaggle
+
+`notebooks/lma_phase3_kaggle.ipynb` runs steps 12–14 in one committed session
+(~17 minutes on a T4). It discovers its three inputs by content — the code
+(`common/finetune.py`), the pretrained checkpoints (`<lang>/best.pt`) and the
+tokenized corpora — so no Kaggle paths need editing;
+`scripts/stage_code_for_kaggle.py` builds the code upload.
 
 ---
 

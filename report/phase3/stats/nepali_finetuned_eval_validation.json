@@ -1,0 +1,16 @@
+{
+  "language": "nepali",
+  "checkpoint": "checkpoints/nepali_reasoning/best.pt",
+  "checkpoint_step": 1050,
+  "checkpoint_tokens_seen": 8089558,
+  "split": "validation",
+  "tokens_scored": 4964352,
+  "cross_entropy_nats": 7.375652,
+  "perplexity": 1596.633,
+  "bytes_per_token": 11.5191,
+  "bits_per_byte": 0.923754,
+  "vocab_size": 16000,
+  "positional": "learned",
+  "run": "nepali_finetuned",
+  "eval_seconds": 52.3
+}
