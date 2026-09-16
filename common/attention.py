@@ -456,7 +456,8 @@ def plot_layer_profiles(summary: dict, out_path: Path, language: str) -> None:
 
 
 def write_token_table(token_ids: np.ndarray, sp, out_path: Path,
-                      language: str, max_positions: int) -> str:
+                      language: str, max_positions: int,
+                      source: str = "held-out test split") -> str:
     """Write the example sentence and its per-position tokens as Markdown.
 
     Figure axes carry positions rather than token strings because Matplotlib
@@ -481,7 +482,7 @@ def write_token_table(token_ids: np.ndarray, sp, out_path: Path,
              "Heatmap axes are labelled with token **positions**; this table maps",
              "each position to its token. Matplotlib ships no Telugu or Devanagari",
              "glyphs, so token strings cannot be drawn on the figure axes.", "",
-             "## Example passage (held-out test split)", "",
+             f"## Example passage ({source})", "",
              "> " + sentence.replace("\n", " ")[:1200], "",
              f"## Positions 0–{len(ids) - 1}", "",
              "| pos | token | pos | token | pos | token | pos | token |",
@@ -502,7 +503,10 @@ def write_token_table(token_ids: np.ndarray, sp, out_path: Path,
 def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
             fig_dir: Path, split: str = "test", n_examples: int = 3,
             positions: int = 96, skip: int = 16, seed: int | None = None,
-            name: str | None = None) -> dict:
+            name: str | None = None,
+            sequences: list[np.ndarray] | None = None,
+            source_label: str | None = None,
+            return_attention: bool = False):
     """Run the whole attention analysis for one checkpoint.
 
     Statistics are averaged over ``n_examples`` independent held-out passages
@@ -525,9 +529,18 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
             by design -- it is the same corpus and tokenizer, which is what
             makes it a controlled comparison -- so without this it would
             silently overwrite Model H's attention results and figures.
+        sequences: Explicit token-id sequences to analyze instead of random
+            passages from ``split``. Phase 3 passes the SAME reasoning prompts
+            to the pretrained and the finetuned checkpoint, so any difference
+            in the maps is attributable to finetuning and not to the input.
+        source_label: Description of where ``sequences`` came from, for the
+            token table heading.
+        return_attention: Also return the first sequence's raw ``(L, H, T, T)``
+            attention array, for paired pretrained-vs-finetuned figures.
 
     Returns:
-        The JSON-serializable summary that was written to disk.
+        The JSON-serializable summary that was written to disk, or
+        ``(summary, first_attention)`` when ``return_attention`` is set.
     """
     import sentencepiece as spm
 
@@ -547,24 +560,31 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
 
     model, ck = load_model_from_checkpoint(ckpt_path, device)
     sp = spm.SentencePieceProcessor(model_file=config["paths"]["tokenizer"])
-    ds = TokenDataset(config["paths"][f"{split}_bin"],
-                      config["model"]["block_size"], device,
-                      seed=config["train"]["seed"])
 
-    rng = np.random.default_rng(seed if seed is not None
-                                else config["train"]["seed"])
-    starts = rng.integers(0, len(ds) - positions, size=n_examples)
+    if sequences is None:
+        ds = TokenDataset(config["paths"][f"{split}_bin"],
+                          config["model"]["block_size"], device,
+                          seed=config["train"]["seed"])
+        rng = np.random.default_rng(seed if seed is not None
+                                    else config["train"]["seed"])
+        starts = rng.integers(0, len(ds) - positions, size=n_examples)
+        seqs = [np.asarray(ds.data[s:s + positions]) for s in starts]
+        source = source_label or f"held-out {split} split"
+    else:
+        seqs = [np.asarray(s) for s in sequences]
+        n_examples = len(seqs)
+        source = source_label or "reasoning prompts"
+        positions = max(len(s) for s in seqs)
 
     per_example, first_attn = [], None
-    for k, s in enumerate(starts):
-        ids = np.asarray(ds.data[s:s + positions])
+    for k, ids in enumerate(seqs):
         attn = collect_attention(model, ids, device, ctx)
         per_example.append(summarize(attn, skip))
         if k == 0:
             first_attn = attn
             sentence = write_token_table(
                 ids, sp, out_dir / f"{stem}_attention_tokens.md",
-                stem, positions)
+                stem, len(ids), source=source)
 
     # Average each statistic across the example passages.
     L, H = per_example[0]["n_layer"], per_example[0]["n_head"]
@@ -617,6 +637,8 @@ def analyze(config: dict, ckpt_path: Path, device: str, out_dir: Path,
     out_json.write_text(json.dumps(summary, indent=2, ensure_ascii=False),
                         encoding="utf-8")
     logger.info("  wrote %s", out_json)
+    if return_attention:
+        return summary, first_attn
     return summary
 
 

@@ -1,0 +1,4 @@
+{"step": 0, "epoch": 0, "tokens": 0, "val_loss": 9.70355, "val_answer_loss": 9.70355, "val_exact_match": 0.0, "val_exact_match_by_task": {"chain_relation": 0.0, "numeric_compare": 0.0, "ordering": 0.0, "superlative_chain": 0.0, "yes_no": 0.0}, "tag": "init"}
+{"step": 10, "epoch": 0, "tokens": 17190, "train_loss": 9.69156, "lr": 2e-05, "grad_norm": 1.5297, "tokens_per_sec": 7648.1, "elapsed_s": 2.2}
+{"step": 12, "epoch": 0, "tokens": 20730, "val_loss": 9.68707, "val_answer_loss": 9.68707, "val_exact_match": 0.0, "val_exact_match_by_task": {"chain_relation": 0.0, "numeric_compare": 0.0, "ordering": 0.0, "superlative_chain": 0.0, "yes_no": 0.0}, "tag": "final"}
+{"step": 12, "tokens": 20730, "epochs_completed": 0, "final_val_loss": 9.68707, "final_val_answer_loss": 9.68707, "final_val_exact_match": 0.0, "best_val_exact_match": 0.0, "wall_clock_s": 12.5}
