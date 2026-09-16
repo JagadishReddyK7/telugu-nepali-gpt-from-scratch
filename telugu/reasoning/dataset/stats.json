@@ -1,9 +1,9 @@
 {
   "seed": 1337,
   "sizes": {
-    "train": 50000,
-    "validation": 2000,
-    "test": 3000
+    "train": 6000,
+    "validation": 500,
+    "test": 1000
   },
   "entity_pools": {
     "names": {
@@ -32,163 +32,163 @@
   "per_split": {
     "train": {
       "task": {
-        "chain_relation": 10000,
-        "numeric_compare": 10000,
-        "ordering": 10000,
-        "superlative_chain": 10000,
-        "yes_no": 10000
+        "chain_relation": 1200,
+        "numeric_compare": 1200,
+        "ordering": 1200,
+        "superlative_chain": 1200,
+        "yes_no": 1200
       },
       "attribute": {
-        "age": 7088,
-        "height": 7201,
-        "marks": 7210,
-        "object_weight": 7171,
-        "price": 7121,
-        "speed": 7081,
-        "weight": 7128
+        "age": 821,
+        "height": 900,
+        "marks": 852,
+        "object_weight": 858,
+        "price": 859,
+        "speed": 846,
+        "weight": 864
       },
       "n_entities": {
-        "2": 6681,
-        "3": 33343,
-        "4": 9976
+        "2": 794,
+        "3": 4075,
+        "4": 1131
       },
       "hops": {
-        "1": 16069,
-        "2": 26667,
-        "3": 7264
+        "1": 1932,
+        "2": 3242,
+        "3": 826
       },
       "template_held_out": {
-        "False": 50000
+        "False": 6000
       },
       "answer_kinds": {
-        "entity_name": 18988,
-        "equal": 1012,
-        "no": 5013,
-        "ordering_list": 10000,
-        "relation_sentence": 7513,
-        "undetermined": 2487,
-        "yes": 4987
+        "entity_name": 2272,
+        "equal": 128,
+        "no": 617,
+        "ordering_list": 1200,
+        "relation_sentence": 920,
+        "undetermined": 280,
+        "yes": 583
       },
-      "mean_prompt_chars": 152.1,
-      "mean_answer_chars": 14.8,
+      "mean_prompt_chars": 151.3,
+      "mean_answer_chars": 14.9,
       "prompt_tokens": {
-        "mean": 36.9,
-        "max": 65,
-        "min": 20
+        "mean": 36.7,
+        "max": 61,
+        "min": 22
       },
       "answer_tokens": {
-        "mean": 3.9,
-        "max": 16,
+        "mean": 3.8,
+        "max": 15,
         "min": 1
       },
-      "total_tokens_with_bos_eos": 2137009
+      "total_tokens_with_bos_eos": 255200
     },
     "validation": {
       "task": {
-        "chain_relation": 400,
-        "numeric_compare": 400,
-        "ordering": 400,
-        "superlative_chain": 400,
-        "yes_no": 400
+        "chain_relation": 100,
+        "numeric_compare": 100,
+        "ordering": 100,
+        "superlative_chain": 100,
+        "yes_no": 100
       },
       "attribute": {
-        "age": 297,
-        "height": 318,
-        "marks": 270,
-        "object_weight": 292,
-        "price": 276,
-        "speed": 257,
-        "weight": 290
+        "age": 67,
+        "height": 84,
+        "marks": 53,
+        "object_weight": 77,
+        "price": 66,
+        "speed": 77,
+        "weight": 76
       },
       "n_entities": {
-        "2": 265,
-        "3": 1361,
-        "4": 374
+        "2": 68,
+        "3": 339,
+        "4": 93
       },
       "hops": {
-        "1": 658,
-        "2": 1060,
-        "3": 282
+        "1": 168,
+        "2": 262,
+        "3": 70
       },
       "template_held_out": {
-        "False": 2000
+        "False": 500
       },
       "answer_kinds": {
-        "entity_name": 769,
-        "equal": 31,
-        "no": 208,
-        "ordering_list": 400,
-        "relation_sentence": 296,
-        "undetermined": 104,
-        "yes": 192
+        "entity_name": 193,
+        "equal": 7,
+        "no": 56,
+        "ordering_list": 100,
+        "relation_sentence": 76,
+        "undetermined": 24,
+        "yes": 44
       },
-      "mean_prompt_chars": 150.5,
-      "mean_answer_chars": 14.6,
+      "mean_prompt_chars": 150.4,
+      "mean_answer_chars": 14.5,
       "prompt_tokens": {
         "mean": 36.9,
-        "max": 57,
-        "min": 23
+        "max": 56,
+        "min": 24
       },
       "answer_tokens": {
         "mean": 3.9,
-        "max": 16,
+        "max": 14,
         "min": 1
       },
-      "total_tokens_with_bos_eos": 85510
+      "total_tokens_with_bos_eos": 21396
     },
     "test": {
       "task": {
-        "chain_relation": 600,
-        "numeric_compare": 600,
-        "ordering": 600,
-        "superlative_chain": 600,
-        "yes_no": 600
+        "chain_relation": 200,
+        "numeric_compare": 200,
+        "ordering": 200,
+        "superlative_chain": 200,
+        "yes_no": 200
       },
       "attribute": {
-        "age": 447,
-        "height": 450,
-        "marks": 434,
-        "object_weight": 428,
-        "price": 408,
-        "speed": 405,
-        "weight": 428
+        "age": 137,
+        "height": 144,
+        "marks": 144,
+        "object_weight": 160,
+        "price": 157,
+        "speed": 134,
+        "weight": 124
       },
       "n_entities": {
-        "2": 419,
-        "3": 1965,
-        "4": 616
+        "2": 140,
+        "3": 650,
+        "4": 210
       },
       "hops": {
-        "1": 955,
-        "2": 1610,
-        "3": 435
+        "1": 326,
+        "2": 529,
+        "3": 145
       },
       "template_held_out": {
-        "False": 1441,
-        "True": 1559
+        "False": 487,
+        "True": 513
       },
       "answer_kinds": {
-        "entity_name": 1142,
-        "equal": 58,
-        "no": 304,
-        "ordering_list": 600,
-        "relation_sentence": 472,
-        "undetermined": 128,
-        "yes": 296
+        "entity_name": 381,
+        "equal": 19,
+        "no": 95,
+        "ordering_list": 200,
+        "relation_sentence": 160,
+        "undetermined": 40,
+        "yes": 105
       },
-      "mean_prompt_chars": 159.7,
+      "mean_prompt_chars": 159.6,
       "mean_answer_chars": 14.2,
       "prompt_tokens": {
-        "mean": 37.1,
-        "max": 59,
+        "mean": 37.3,
+        "max": 58,
         "min": 23
       },
       "answer_tokens": {
         "mean": 3.7,
-        "max": 14,
+        "max": 13,
         "min": 1
       },
-      "total_tokens_with_bos_eos": 128677
+      "total_tokens_with_bos_eos": 43059
     }
   },
   "language": "telugu",
