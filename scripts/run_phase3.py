@@ -254,7 +254,12 @@ def main() -> None:
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--langs", nargs="+", default=["telugu", "nepali"])
-    p.add_argument("--ckpt-root", type=Path, default=Path("checkpoints"))
+    p.add_argument("--ckpt-root", type=Path, default=Path("checkpoints"),
+                   help="Holds <lang>_reasoning/best.pt (finetuned).")
+    p.add_argument("--pretrained-root", type=Path, default=None,
+                   help="Holds <lang>/best.pt (pretrained). Defaults to "
+                        "--ckpt-root; on Kaggle the pretrained checkpoints "
+                        "live read-only under /kaggle/input.")
     p.add_argument("--stats-dir", type=Path, default=Path("report/phase3/stats"))
     p.add_argument("--fig-dir", type=Path, default=Path("report/phase3/figures"))
     p.add_argument("--skip", nargs="*", default=[],
@@ -272,7 +277,7 @@ def main() -> None:
         logger.info("device: %s", device)
         for lang in args.langs:
             cfg = yaml.safe_load(Path(f"{lang}/configs/finetune.yaml").read_text(encoding="utf-8"))
-            pre = args.ckpt_root / lang / "best.pt"
+            pre = (args.pretrained_root or args.ckpt_root) / lang / "best.pt"
             ft = args.ckpt_root / f"{lang}_reasoning" / "best.pt"
             for c in (pre, ft):
                 if not c.exists():

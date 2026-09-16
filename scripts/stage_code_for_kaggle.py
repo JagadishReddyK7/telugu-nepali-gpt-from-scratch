@@ -35,6 +35,10 @@ from pathlib import Path
 INCLUDE_DIRS = ["common", "telugu", "nepali", "scripts", "tests"]
 
 EXCLUDE_DIR_NAMES = {"__pycache__", ".ipynb_checkpoints", ".pytest_cache"}
+# The Phase 3 reasoning splits are regenerated on Kaggle in two seconds by
+# `python -m <lang>.reasoning.generate` (deterministic); shipping 60MB of
+# JSONL in every code upload buys nothing.
+EXCLUDE_DIR_NAMES |= {"dataset"}
 EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
 
 # Markers proving the archive carries the current code rather than an earlier
@@ -57,6 +61,23 @@ REQUIRED_MARKERS = {
     "common/data.py": [
         ("chunked BPB byte count", lambda s: "CHUNK" in s),
     ],
+    # Phase 3
+    "common/finetune.py": [
+        ("--session-steps (clean stop without touching the schedule)",
+         lambda s: "session_steps" in s),
+        ("explicit answer mask for answer-only loss", lambda s: "a.float()" in s),
+    ],
+    "common/reasoning_eval.py": [
+        ("bucketed generation", lambda s: "bucket" in s.lower()),
+    ],
+    "common/attention_compare.py": [
+        ("piece offsets without proto API", lambda s: "def piece_offsets" in s),
+    ],
+    "scripts/run_phase3.py": [
+        ("--pretrained-root", lambda s: "--pretrained-root" in s),
+    ],
+    "telugu/reasoning/lexicon.py": [("present", lambda s: "LEXICON" in s)],
+    "nepali/reasoning/lexicon.py": [("present", lambda s: "LEXICON" in s)],
 }
 
 
