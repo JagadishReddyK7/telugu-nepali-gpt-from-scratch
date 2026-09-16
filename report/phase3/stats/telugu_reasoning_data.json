@@ -1,0 +1,319 @@
+{
+  "seed": 1337,
+  "sizes": {
+    "train": 30000,
+    "validation": 2000,
+    "test": 3000
+  },
+  "entity_pools": {
+    "names": {
+      "test": 15,
+      "validation": 11,
+      "train": 50
+    },
+    "objects": {
+      "test": 6,
+      "validation": 4,
+      "train": 20
+    }
+  },
+  "entity_pools_disjoint": true,
+  "attributes": [
+    "height",
+    "age",
+    "weight",
+    "speed",
+    "marks",
+    "price",
+    "object_weight"
+  ],
+  "templates_total": 199,
+  "template_families_with_held_out_phrasing": 85,
+  "per_split": {
+    "train": {
+      "task": {
+        "chain_relation": 6000,
+        "numeric_compare": 6000,
+        "ordering": 6000,
+        "superlative_chain": 6000,
+        "yes_no": 6000
+      },
+      "attribute": {
+        "age": 4249,
+        "height": 4253,
+        "marks": 4342,
+        "object_weight": 4365,
+        "price": 4282,
+        "speed": 4226,
+        "weight": 4283
+      },
+      "n_entities": {
+        "2": 4039,
+        "3": 20013,
+        "4": 5948
+      },
+      "hops": {
+        "1": 9707,
+        "2": 15979,
+        "3": 4314
+      },
+      "template_held_out": {
+        "False": 30000
+      },
+      "answer_kinds": {
+        "entity_name": 11339,
+        "equal": 661,
+        "no": 3009,
+        "ordering_list": 6000,
+        "relation_sentence": 4473,
+        "undetermined": 1527,
+        "yes": 2991
+      },
+      "mean_prompt_chars": 138.0,
+      "mean_answer_chars": 11.2,
+      "prompt_tokens": {
+        "mean": 33.6,
+        "max": 57,
+        "min": 20
+      },
+      "answer_tokens": {
+        "mean": 3.0,
+        "max": 15,
+        "min": 1
+      },
+      "total_tokens_with_bos_eos": 1157854
+    },
+    "validation": {
+      "task": {
+        "chain_relation": 400,
+        "numeric_compare": 400,
+        "ordering": 400,
+        "superlative_chain": 400,
+        "yes_no": 400
+      },
+      "attribute": {
+        "age": 258,
+        "height": 306,
+        "marks": 286,
+        "object_weight": 285,
+        "price": 282,
+        "speed": 309,
+        "weight": 274
+      },
+      "n_entities": {
+        "2": 262,
+        "3": 1332,
+        "4": 406
+      },
+      "hops": {
+        "1": 639,
+        "2": 1065,
+        "3": 296
+      },
+      "template_held_out": {
+        "False": 2000
+      },
+      "answer_kinds": {
+        "entity_name": 763,
+        "equal": 37,
+        "no": 203,
+        "ordering_list": 400,
+        "relation_sentence": 296,
+        "undetermined": 104,
+        "yes": 197
+      },
+      "mean_prompt_chars": 141.0,
+      "mean_answer_chars": 11.7,
+      "prompt_tokens": {
+        "mean": 34.4,
+        "max": 53,
+        "min": 21
+      },
+      "answer_tokens": {
+        "mean": 3.2,
+        "max": 10,
+        "min": 1
+      },
+      "total_tokens_with_bos_eos": 79181
+    },
+    "test": {
+      "task": {
+        "chain_relation": 600,
+        "numeric_compare": 600,
+        "ordering": 600,
+        "superlative_chain": 600,
+        "yes_no": 600
+      },
+      "attribute": {
+        "age": 411,
+        "height": 457,
+        "marks": 435,
+        "object_weight": 412,
+        "price": 399,
+        "speed": 448,
+        "weight": 438
+      },
+      "n_entities": {
+        "2": 400,
+        "3": 2014,
+        "4": 586
+      },
+      "hops": {
+        "1": 973,
+        "2": 1611,
+        "3": 416
+      },
+      "template_held_out": {
+        "False": 1495,
+        "True": 1505
+      },
+      "answer_kinds": {
+        "entity_name": 1134,
+        "equal": 66,
+        "no": 297,
+        "ordering_list": 600,
+        "relation_sentence": 463,
+        "undetermined": 137,
+        "yes": 303
+      },
+      "mean_prompt_chars": 147.8,
+      "mean_answer_chars": 11.0,
+      "prompt_tokens": {
+        "mean": 34.6,
+        "max": 53,
+        "min": 20
+      },
+      "answer_tokens": {
+        "mean": 3.0,
+        "max": 13,
+        "min": 1
+      },
+      "total_tokens_with_bos_eos": 118920
+    }
+  },
+  "language": "telugu",
+  "entity_pool_members": {
+    "names": {
+      "test": [
+        "రేఖ",
+        "రాజేష్",
+        "గోపి",
+        "గిరి",
+        "అనూష",
+        "జ్యోతి",
+        "హరి",
+        "మహేష్",
+        "అనిత",
+        "ఉమ",
+        "ప్రవీణ్",
+        "భాను",
+        "గీత",
+        "వాణి",
+        "విజయ్"
+      ],
+      "validation": [
+        "మోహన్",
+        "శారద",
+        "శ్రీను",
+        "కార్తీక్",
+        "సునీత",
+        "లక్ష్మి",
+        "మౌనిక",
+        "సురేష్",
+        "సుమతి",
+        "రాము",
+        "వినయ్"
+      ],
+      "train": [
+        "రాణి",
+        "సందీప్",
+        "చంద్ర",
+        "పుష్ప",
+        "ఆనంద్",
+        "అర్జున్",
+        "కృష్ణ",
+        "దుర్గ",
+        "శివ",
+        "భారతి",
+        "ప్రసాద్",
+        "మధు",
+        "పార్వతి",
+        "సుజాత",
+        "రాజు",
+        "వేణు",
+        "కవిత",
+        "రాధ",
+        "రమేష్",
+        "సాయి",
+        "శ్రావణి",
+        "సీత",
+        "ప్రియ",
+        "స్వాతి",
+        "రూప",
+        "రమ్య",
+        "హేమ",
+        "రవీంద్ర",
+        "కిరణ్",
+        "మాధవి",
+        "నరేష్",
+        "శంకర్",
+        "రవి",
+        "నీలిమ",
+        "సరోజ",
+        "రఘు",
+        "తేజ",
+        "సతీష్",
+        "పద్మ",
+        "లావణ్య",
+        "నాగరాజు",
+        "వంశీ",
+        "మంజుల",
+        "సురేంద్ర",
+        "దీప",
+        "గణేష్",
+        "లత",
+        "కల్పన",
+        "బాలు",
+        "పవన్"
+      ]
+    },
+    "objects": {
+      "test": [
+        "బల్ల",
+        "పళ్ళెం",
+        "గొడుగు",
+        "రేడియో",
+        "కంప్యూటర్",
+        "గడియారం"
+      ],
+      "validation": [
+        "ఫోను",
+        "బొమ్మ",
+        "టోపీ",
+        "చెప్పులు"
+      ],
+      "train": [
+        "సంచి",
+        "బ్యాగు",
+        "బాటిల్",
+        "బకెట్",
+        "సైకిల్",
+        "టీవీ",
+        "చొక్కా",
+        "టేబుల్",
+        "కళ్ళజోడు",
+        "పుస్తకం",
+        "దీపం",
+        "కుండ",
+        "కెమెరా",
+        "పెన్ను",
+        "ఫ్రిజ్",
+        "కప్పు",
+        "కుర్చీ",
+        "బంతి",
+        "పెట్టె",
+        "ల్యాప్‌టాప్"
+      ]
+    }
+  }
+}
