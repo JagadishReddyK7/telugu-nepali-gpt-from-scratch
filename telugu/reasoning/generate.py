@@ -4,7 +4,7 @@ Generate the Telugu synthetic reasoning dataset (Model H, Phase 3.1).
     python -m telugu.reasoning.generate
     python -m telugu.reasoning.generate --train 30000 --val 2000 --test 3000
 
-Writes ``telugu/reasoning/data/{train,validation,test}.jsonl`` plus
+Writes ``telugu/reasoning/dataset/{train,validation,test}.jsonl`` plus
 ``stats.json`` and ``samples.md``, and copies the statistics and samples into
 ``report/phase3/stats/``. Deterministic: the same seed regenerates the
 identical files byte for byte.
@@ -36,7 +36,7 @@ def main() -> None:
     p.add_argument("--val", type=int, default=2_000)
     p.add_argument("--test", type=int, default=3_000)
     p.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    p.add_argument("--out-dir", type=Path, default=Path("telugu/reasoning/data"))
+    p.add_argument("--out-dir", type=Path, default=Path("telugu/reasoning/dataset"))
     p.add_argument("--tokenizer", default="telugu/tokenizer/telugu_sp_16000.model")
     p.add_argument("--report-dir", type=Path, default=Path("report/phase3/stats"))
     args = p.parse_args()

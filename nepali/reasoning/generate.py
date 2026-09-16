@@ -4,7 +4,7 @@ Generate the Nepali synthetic reasoning dataset (Model L, Phase 3.1).
     python -m nepali.reasoning.generate
     python -m nepali.reasoning.generate --train 30000 --val 2000 --test 3000
 
-Writes ``nepali/reasoning/data/{train,validation,test}.jsonl`` plus
+Writes ``nepali/reasoning/dataset/{train,validation,test}.jsonl`` plus
 ``stats.json`` and ``samples.md``, and copies the statistics and samples into
 ``report/phase3/stats/``. Deterministic: the same seed regenerates the
 identical files byte for byte.
@@ -36,7 +36,7 @@ def main() -> None:
     p.add_argument("--val", type=int, default=2_000)
     p.add_argument("--test", type=int, default=3_000)
     p.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    p.add_argument("--out-dir", type=Path, default=Path("nepali/reasoning/data"))
+    p.add_argument("--out-dir", type=Path, default=Path("nepali/reasoning/dataset"))
     p.add_argument("--tokenizer", default="nepali/tokenizer/nepali_sp_16000.model")
     p.add_argument("--report-dir", type=Path, default=Path("report/phase3/stats"))
     args = p.parse_args()
