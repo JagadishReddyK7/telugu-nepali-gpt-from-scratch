@@ -282,7 +282,14 @@ def main() -> None:
             for c in (pre, ft):
                 if not c.exists():
                     raise SystemExit(f"[{lang}] checkpoint not found: {c}")
-            logger.info("\n=== %s ===", lang)
+            # The finetune YAML carries no architecture block by design (it is
+            # read from init_from); the Phase 2 tools need config["model"], so
+            # take it from the finetuned checkpoint, which is self-describing.
+            ft_ck = torch.load(ft, map_location="cpu", weights_only=False)
+            cfg["model"] = ft_ck["config"]["model"]
+            logger.info("\n=== %s  (finetuned step %s, from %s) ===", lang,
+                        ft_ck.get("step"), ft_ck["config"].get("init_from"))
+            del ft_ck
             if "pretrained" not in args.skip:
                 stage_reasoning(lang, "pretrained", cfg, pre, device, args.stats_dir, args.force)
             if "finetuned" not in args.skip:
