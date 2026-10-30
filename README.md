@@ -1,32 +1,85 @@
-# Monolingual Transformer LMs in Telugu and Nepali
+# Telugu & Nepali GPTs from Scratch
 
-Individual Project — Language Models and Agents, Monsoon 2026
+Two GPT-style language models with about 26M parameters each, one for **Telugu** (తెలుగు)
+and one for **Nepali** (नेपाली), built end to end in PyTorch. The project covers the web
+crawler and the 1.2B-token corpus, the tokenizers, the Transformer itself (attention
+coded by hand), 500M-token pretraining runs, evaluation, an ablation, and a
+reasoning finetune.
 
-Two **fully independent** decoder-only Transformer language models (~25M parameters
-each), built from scratch in PyTorch:
+No pretrained models, no pretrained tokenizers, and no Hugging Face `transformers`.
 
-| | Model H | Model L |
-|---|---|---|
-| Language | **Telugu** (తెలుగు) | **Nepali** (नेपाली) |
-| Script | Telugu (Brahmic) | Devanagari |
-| Resource tier | Higher-resource | Lower-resource (allowed list) |
-| Corpus | Own — no overlap with Model L | Own — no overlap with Model H |
-| Tokenizer | Own BPE, own vocabulary | Own BPE, own vocabulary |
-| Weights | Independently initialized and trained | Independently initialized and trained |
+**Python · PyTorch · SentencePiece · datasketch (MinHash-LSH) · fastText LID · Tesseract OCR · Kaggle/Colab T4**
 
-The two models share **code** but never share **artifacts**. No document, token,
-vocabulary entry, or weight crosses between them.
+## Results at a glance
 
-**Phase 1 — data and tokenizers: [`report/phase1/phase1_report.md`](report/phase1/phase1_report.md).**
-**Phase 2 — model, pretraining and evaluation: [`report/phase2/phase2_report.md`](report/phase2/phase2_report.md).**
-**Phase 3 — reasoning finetuning, attention comparison, and the consolidated final report: [`report/phase3/phase3_report.md`](report/phase3/phase3_report.md).**
+| | Telugu | Nepali |
+|---|---:|---:|
+| Corpus after cleaning | 674M tokens · 3.1M docs | 511M tokens · 2.2M docs |
+| Share collected by my own crawler + OCR | 26.9% | 21.8% |
+| Parameters | 25.86M | 25.86M |
+| Pretraining | 500M tokens · 4.5 h on one T4 | 500M tokens · 4.6 h on one T4 |
+| **Test perplexity** | **60.3** | **41.7** |
+| Test bits per byte (comparable across tokenizers) | 0.577 | 0.468 |
+| Reasoning exact match, before → after finetune | 0.5% → 26.9% | 0.0% → 25.0% |
+
+## What's in here
+
+- **Data pipeline.** Corpus sources:
+  - a polite, resumable, sitemap-driven news crawler (its SQLite state survives reboots)
+  - OCR'd public-domain books from archive.org
+  - streamed public corpora
+
+  Cleaning steps: Unicode normalization, script-ratio filtering, fastText language ID to
+  separate Nepali from Hindi, and exact plus **MinHash-LSH** near-duplicate removal.
+  Deduplication runs *before* the document-level splits, so no text leaks between
+  train and test. → [`common/`](common/), [Phase 1 report](report/phase1/phase1_report.md)
+- **Tokenizers.** SentencePiece BPE, trained from scratch for each language. The vocabulary
+  sweep favored 32k entries, but I chose 16k: at `d_model=384`, a 32k vocabulary
+  would have spent 12.3M of the 25M-parameter budget on embeddings.
+- **Model.** A decoder-only Transformer built only from `nn.Linear`, `nn.Embedding`,
+  `nn.LayerNorm` and `nn.Dropout`. Multi-head causal self-attention, the causal mask
+  and positional embeddings are all written by hand. It has 11 layers, `d_model` 384,
+  6 heads, a 512-token context and tied embeddings.
+  → [`common/model.py`](common/model.py)
+- **Training.** AdamW with cosine decay and warmup, fp16 mixed precision with
+  GradScaler, and gradient accumulation. Training is **crash-safe**: checkpoints store
+  the weights, both AdamW moments, the scaler state and every RNG state, so
+  resuming is bit-exact, and a test verifies it.
+  → [`common/train.py`](common/train.py)
+- **Evaluation.** Perplexity, bits per byte (the fair comparison across different
+  tokenizers), BLEU, chrF++ and ROUGE-L, plus attention analysis: heatmaps, entropy,
+  attention distance and head roles. → [Phase 2 report](report/phase2/phase2_report.md)
+- **Ablation.** Removing positional embeddings costs only 0.041 nats/token (~1%
+  bits per byte) and trains 8.3% faster. The causal mask already gives the model a
+  positional signal.
+- **Reasoning finetune.** A generator for synthetic comparative-reasoning data in both
+  languages (transitive chains, numeric comparisons, "cannot be determined"
+  cases), trained with answer-only loss. Exact match rose from ~0% to ~26%. Comparing
+  attention before and after finetuning shows the gain comes from answer format and
+  entity lookup, not a learned comparison procedure.
+  → [Phase 3 report](report/phase3/phase3_report.md)
+- **Tests.** 40 pytest tests, including ones that check the causal mask hides future
+  tokens, that training resumes bit-exactly, and that no entities leak between data splits.
+
+**Full write-up:** [`report/final_report/final_report.pdf`](report/final_report/final_report.pdf)
+
+## Background
+
+I built this alone for the *Language Models and Agents* course (Monsoon 2026), in
+three phases: data and tokenizers, then model, pretraining and evaluation, then the
+reasoning finetune and attention study. The `phase-1`, `phase-2` and `phase-3` branches
+keep a snapshot of the code at the end of each phase.
+
+In the detailed sections below, **Model H** is the Telugu model (higher-resource)
+and **Model L** is the Nepali model (lower-resource). The two models share code
+but never share data, vocabulary or weights.
 
 ---
 
 ## Google Drive artifacts
 
-> Large artifacts are not committed to git, per the project spec. Fill these in
-> as each phase completes and keep permissions open so graders need not request access.
+> Large artifacts (corpora, tokenized binaries, checkpoints) are kept out of git
+> and hosted on Google Drive. All links are open, so no access request is needed.
 
 | Artifact | Link |
 |---|---|
@@ -122,14 +175,14 @@ rather than merely archived.
 ### 0. Setup
 
 ```bash
-git clone <this-repo>
-cd <this-repo>
+git clone https://github.com/JagadishReddyK7/telugu-nepali-gpt-from-scratch.git
+cd telugu-nepali-gpt-from-scratch
 pip install -r requirements.txt
 ```
 
 ### 1. Start the crawlers — do this FIRST
 
-The ≥20% manual-collection requirement is the long pole in Phase 1. Crawlers need
+The ≥20% self-collected share is the slowest step in Phase 1. Crawlers need
 days of wall-clock time, so launch them before anything else and let them run in
 the background.
 
@@ -251,7 +304,7 @@ Counts every token id across the encoded `train.bin`, writes
 `report/phase1/stats/<lang>_token_frequency.json` and a Zipf/coverage figure, and
 decodes sample documents back out of the binary so the printed examples are
 provably what was encoded. Covers the vocabulary-size, token-frequency,
-chars-per-token, examples and UNK statistics that Phase 1 §1.3 asks for.
+chars-per-token, examples and UNK statistics.
 
 ---
 
@@ -270,9 +323,9 @@ Machine-generated numbers-only companion:
 | Vocabulary | 16,000 | 16,000 |
 | UNK rate (measured) | 0.00e+00 | 0.00e+00 |
 
-Both exceed the ~500M target and both clear the ≥20% manual requirement, which
-the spec states in **tokens** — and which is measured in tokens here, during the
-encoding pass, not inferred from a character proxy.
+Both exceed the ~500M-token target, and both keep the self-collected share above
+20%. That share is measured in **tokens** during the encoding pass, not inferred
+from character counts.
 
 ---
 
@@ -297,7 +350,7 @@ Perplexity is per *token* and the two tokenizers differ (10.25 vs 11.51 UTF-8
 bytes per token), so bits-per-byte is the comparable figure. On it, the
 lower-resource model is 19% better — analysed in §5 of the Phase 2 report.
 
-The bonus ablation retrains Model H with `positional: none`. Removing the
+The ablation retrains Model H with `positional: none`. Removing the
 learned positional table costs only **0.041 nats** (0.99% of bits per byte)
 while running 8.3% faster, because causal masking is itself a positional
 signal — position *t* attends to exactly *t*+1 keys. The attention analysis
@@ -358,7 +411,7 @@ logits at position t bit-identical), `test_resume_is_bit_exact`, and for
 Phase 3 `test_labels_are_correct_by_independent_derivation`,
 `test_no_entity_leakage_between_splits` and `test_finetune_resume_is_bit_exact`.
 
-### 11. Ablation (bonus)
+### 11. Ablation: no positional embeddings
 
 Retrains Model H with the positional embedding table removed. Same corpus,
 tokenizer, seed and schedule — only `positional: none` differs, so any
@@ -454,18 +507,18 @@ tokenized corpora — so no Kaggle paths need editing;
 
 ## Phase branches
 
-| Phase | Branch | Deadline | Marks |
-|---|---|---|---|
-| 1 — Data + Tokenizers | `phase-1` | 21 Aug 2026 | 25 |
-| 2 — Model + Pretraining + Eval | `phase-2` | 5 Sep 2026 | 40 |
-| 3 — Reasoning Finetune + Attention + Report | `phase-3` | 16 Sep 2026 | 35 |
+`main` holds the complete project. Each phase built on the one before it, and
+its branch keeps a snapshot of the code at the end of that phase:
 
-Each branch is graded as of its own deadline. Work is pushed incrementally,
-not dumped in a single final commit.
+| Phase | Branch | Scope |
+|---|---|---|
+| 1 | `phase-1` | Data collection, cleaning, tokenizers |
+| 2 | `phase-2` | Model, pretraining, evaluation, ablation |
+| 3 | `phase-3` | Reasoning finetune, attention comparison, final report |
 
 ---
 
-## Compliance with the spec's hard constraints
+## Design constraints
 
 | Constraint | How it is satisfied |
 |---|---|
@@ -473,7 +526,7 @@ not dumped in a single final commit.
 | No pretrained tokenizers | Both tokenizers trained from scratch with `sentencepiece`. |
 | No HuggingFace Transformer classes | `transformers` is not a dependency. `datasets` is used **only** to stream raw text. |
 | Two independent monolingual LMs | Separate configs, corpora, tokenizers, vocabularies, and weights. Enforced by directory separation and verified in the Phase 1 statistics report. |
-| Student-implemented attention / positions / causal mask | Built from `nn.Linear`, `nn.Embedding`, `nn.LayerNorm`, `nn.Dropout` only. |
+| Hand-written attention / positions / causal mask | Built from `nn.Linear`, `nn.Embedding`, `nn.LayerNorm`, `nn.Dropout` only. |
 | Reproducible | All randomness seeded; configs committed; every artifact regenerable from these scripts. |
 
 ### A note on shared `common/` code
@@ -481,6 +534,5 @@ not dumped in a single final commit.
 `common/` holds pipeline *logic* (normalization, crawling, language ID) that both
 languages invoke with their own configuration. This is not artifact sharing: each
 language reads its own YAML, writes to its own data directory, trains its own
-tokenizer, and produces its own weights. The constraint the spec protects — that
-the two models are genuinely independent — is enforced at the data and parameter
-level, which directory separation and the statistics report both verify.
+tokenizer, and produces its own weights. The two models' independence is enforced at
+the data and parameter level, which directory separation and the statistics report both verify.
